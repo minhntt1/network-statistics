@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -35,7 +36,7 @@ class ClientWlanConnectEventTest {
         when(mockEntity.obtainConnectTime()).thenReturn(50400);
 
         // Act
-        ClientWlanConnectEvent event = new ClientWlanConnectEvent(mockEntity, true);
+        ClientWlanConnectEvent event = new ClientWlanConnectEvent(mockEntity);
 
         // Assert
         assertEquals(12345L, event.getDeviceMac());
@@ -58,7 +59,7 @@ class ClientWlanConnectEventTest {
         when(mockEntity.obtainConnectTime()).thenReturn(50400);
 
         // Act
-        ClientWlanConnectEvent event = new ClientWlanConnectEvent(mockEntity, true);
+        ClientWlanConnectEvent event = new ClientWlanConnectEvent(mockEntity);
 
         // Assert
         assertEquals("", event.getDeviceName()); // Should default to empty string
@@ -75,7 +76,7 @@ class ClientWlanConnectEventTest {
         when(mockEntity.obtainConnectTime()).thenReturn(50400);
 
         // Act
-        ClientWlanConnectEvent event = new ClientWlanConnectEvent(mockEntity, true);
+        ClientWlanConnectEvent event = new ClientWlanConnectEvent(mockEntity);
 
         // Assert
         assertEquals(Long.MIN_VALUE, event.getDeviceWlanMac()); // Should default to Long.MIN_VALUE
@@ -91,7 +92,7 @@ class ClientWlanConnectEventTest {
         // For disconnect, date and time are not obtained from entity
 
         // Act
-        ClientWlanConnectEvent event = new ClientWlanConnectEvent(mockEntity, false);
+        ClientWlanConnectEvent event = new ClientWlanConnectEvent(mockEntity, LocalDateTime.now(ZoneOffset.UTC));
 
         // Assert
         assertEquals(12345L, event.getDeviceMac());
@@ -114,7 +115,7 @@ class ClientWlanConnectEventTest {
         when(mockEntity.obtainConnectDate()).thenReturn("2023-10-02");
         when(mockEntity.obtainConnectTime()).thenReturn(50400);
 
-        ClientWlanConnectEvent event = new ClientWlanConnectEvent(mockEntity, true);
+        ClientWlanConnectEvent event = new ClientWlanConnectEvent(mockEntity);
 
         // Act & Assert - Test getters
         assertEquals(12345L, event.getDeviceMac());
@@ -133,9 +134,9 @@ class ClientWlanConnectEventTest {
         ArubaAiClientInfoEntity entity2 = createEntity(12345L, "Device-1", 1921681001, 67890L, "2023-10-02", 50400);
         ArubaAiClientInfoEntity entity3 = createEntity(67890L, "Device-2", 1921681002, 12345L, "2023-10-03", 54000);
 
-        ClientWlanConnectEvent event1 = new ClientWlanConnectEvent(entity1, true);
-        ClientWlanConnectEvent event2 = new ClientWlanConnectEvent(entity2, true);
-        ClientWlanConnectEvent event3 = new ClientWlanConnectEvent(entity3, true);
+        ClientWlanConnectEvent event1 = new ClientWlanConnectEvent(entity1);
+        ClientWlanConnectEvent event2 = new ClientWlanConnectEvent(entity2);
+        ClientWlanConnectEvent event3 = new ClientWlanConnectEvent(entity3);
 
         // Act & Assert
         // Test that objects with same field values have same field values
@@ -155,7 +156,7 @@ class ClientWlanConnectEventTest {
     void testEqualsWithNull() {
         // Arrange
         ArubaAiClientInfoEntity entity = createEntity(12345L, "Device-1", 1921681001, 67890L, "2023-10-02", 50400);
-        ClientWlanConnectEvent event = new ClientWlanConnectEvent(entity, true);
+        ClientWlanConnectEvent event = new ClientWlanConnectEvent(entity);
 
         // Act & Assert
         assertNotEquals(event, null);
@@ -166,7 +167,7 @@ class ClientWlanConnectEventTest {
     void testHashCodeConsistency() {
         // Arrange
         ArubaAiClientInfoEntity entity = createEntity(12345L, "Device-1", 1921681001, 67890L, "2023-10-02", 50400);
-        ClientWlanConnectEvent event = new ClientWlanConnectEvent(entity, true);
+        ClientWlanConnectEvent event = new ClientWlanConnectEvent(entity);
 
         // Act & Assert
         int initialHashCode = event.hashCode();
