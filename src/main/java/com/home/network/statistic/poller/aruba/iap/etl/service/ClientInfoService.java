@@ -17,9 +17,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -98,6 +101,10 @@ public class ClientInfoService implements BaseService {
 		var clientUptimeRecords = new HashMap<ClientUptimeRecord, ClientUptimeRecord>();
 		var clientHourlyTraffics = new HashMap<ClientTrafficHourlyCount, ClientTrafficHourlyCount>();
 
+		// define first poll time in batch, useful when used to determine time for disconnect event
+		// disconnect time of device in batch ~ device not have data in batch -> first batch time
+		LocalDateTime firstPollTime = null;
+
 		try (var stream = jdbcTemplate.queryForStream(listSqlQuery.getQueryValue("getAllStaging"), new BeanPropertyRowMapper<>(ArubaAiClientInfoEntity.class))) {
 			for (var it = stream.iterator(); it.hasNext();) {
 				// curr device state
@@ -105,6 +112,11 @@ public class ClientInfoService implements BaseService {
 				// get device key based on device mac and device name, and device iface wifi because considering
 				// if same mac but name change, it is also a reconnection
 				var stateKey = currState.obtainJobStateKey();
+
+				if (firstPollTime == null) {
+					// get poll time in current batch
+					firstPollTime = currState.getPollTime();
+				}
 
 				// get prev device state key
 				var prevState = ArubaAiClientInfoEntity.from(deviceStateMap.getString(stateKey));
@@ -120,11 +132,11 @@ public class ClientInfoService implements BaseService {
 					var deviceHourlyTraffic = new ClientTrafficHourlyCount(currState);
 
 					if (prevState.checkReconnect(currState))
-						clientWlanConnections.add(new ClientWlanConnectEvent(currState, true));
+						clientWlanConnections.add(new ClientWlanConnectEvent(currState));
 
 					clientHourlyTraffics.computeIfAbsent(deviceHourlyTraffic, kk -> deviceHourlyTraffic).adjustTraffic(prevState, currState);
 				} else {	// if device appear first time, no prev state
-					clientWlanConnections.add(new ClientWlanConnectEvent(currState, true));
+					clientWlanConnections.add(new ClientWlanConnectEvent(currState));
 				}
 
 				// update state
@@ -144,7 +156,10 @@ public class ClientInfoService implements BaseService {
 				// add disconnect events when there is no data in snmp result
 				// but what if the batch size is too big (ex: get multpiple time from snmp but doesn't process right after data is fetch, in other words, data ingested size is big)
 				// in that case, there will be no disconnect event detected, because it designed to work when integrating with snmp fetch state each time
-				clientWlanConnections.add(new ClientWlanConnectEvent(oldStateO, false));
+				clientWlanConnections.add(new ClientWlanConnectEvent(
+						oldStateO,
+						Optional.ofNullable(firstPollTime).orElse(LocalDateTime.now(ZoneOffset.UTC))
+				));
 			}
 		}
 
