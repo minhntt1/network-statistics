@@ -1,4 +1,4 @@
-package com.home.network.statistic.poller.rfc1213.igate.out;
+package com.home.network.statistic.poller.rfc1213.out;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -20,7 +20,7 @@ import java.util.Optional;
 @Setter // REMEMBER CAREFULLY: IF PERSIST OBJECT TO DB, BUT DOESN’T DECLARE SETTER ON OBJECT, HIBERNATE USES REFLECTION TO CREATE OBJECT -> NULL ATTRIBUTE VALUE
 @Builder
 @AllArgsConstructor
-public class Rfc1213IgateIftableTrafficEntity {
+public class IftableTrafficEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long id;
@@ -43,7 +43,7 @@ public class Rfc1213IgateIftableTrafficEntity {
         return ifOperStatus.equals("1") && Optional.ofNullable(ifPhysAddress).map(val -> val != 0).orElse(false);
     }
 
-    public boolean sameDateHour(Rfc1213IgateIftableTrafficEntity o) {
+    public boolean sameDateHour(IftableTrafficEntity o) {
         return
             this.pollTime.toLocalDate().equals(o.pollTime.toLocalDate()) &&
             this.pollTime.toLocalTime().truncatedTo(ChronoUnit.HOURS).equals(o.pollTime.toLocalTime().truncatedTo(ChronoUnit.HOURS));
@@ -51,11 +51,11 @@ public class Rfc1213IgateIftableTrafficEntity {
 
     // o: entity with higher timestamp
     // this: entity with lower timestamp
-    public long calcDiffTxOldNew(Rfc1213IgateIftableTrafficEntity o) {
+    public long calcDiffTxOldNew(IftableTrafficEntity o) {
         return o.ifOutOctets < this.ifOutOctets ? o.ifOutOctets : o.ifOutOctets - this.ifOutOctets;
     }
 
-    public long calcDiffRxOldNew(Rfc1213IgateIftableTrafficEntity o) {
+    public long calcDiffRxOldNew(IftableTrafficEntity o) {
         return o.ifInOctets < this.ifInOctets ? o.ifInOctets : o.ifInOctets - this.ifInOctets;
     }
 
@@ -75,8 +75,8 @@ public class Rfc1213IgateIftableTrafficEntity {
         return JsonUtil.toJson(this);
     }
 
-    public static Rfc1213IgateIftableTrafficEntity from(String json) {
+    public static IftableTrafficEntity from(String json) {
         if (json == null) return null;
-        return JsonUtil.fromJson(json, Rfc1213IgateIftableTrafficEntity.class);
+        return JsonUtil.fromJson(json, IftableTrafficEntity.class);
     }
 }

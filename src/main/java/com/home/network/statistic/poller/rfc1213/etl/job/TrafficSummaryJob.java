@@ -1,15 +1,15 @@
-package com.home.network.statistic.poller.rfc1213.igate.etl.job;
+package com.home.network.statistic.poller.rfc1213.etl.job;
 
-import com.home.network.statistic.poller.rfc1213.igate.etl.service.BaseService;
+import com.home.network.statistic.poller.rfc1213.etl.service.BaseService;
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
-public class Rfc1213IgateJob implements Job {
+public class TrafficSummaryJob implements Job {
     @Autowired(required = false)
-    @Qualifier("rfc1213IgateService")
+    @Qualifier("trafficSummaryService")
     private BaseService baseService;
 
     @Override

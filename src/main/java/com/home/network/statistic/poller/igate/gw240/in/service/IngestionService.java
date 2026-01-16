@@ -4,9 +4,9 @@ import com.home.network.statistic.poller.igate.gw240.in.WebRequestInfo;
 import com.home.network.statistic.poller.igate.gw240.in.WebResponse;
 import com.home.network.statistic.poller.igate.gw240.in.WebUICredentials;
 import com.home.network.statistic.poller.igate.gw240.out.StatusWifiStationRepo;
-import com.home.network.statistic.poller.rfc1213.igate.in.Rfc1213SnmpIgateIfTableResponse;
-import com.home.network.statistic.poller.rfc1213.igate.in.Rfc1213SnmpIgateTarget;
-import com.home.network.statistic.poller.rfc1213.igate.in.SnmpIfTablePhyInfoRequest;
+import com.home.network.statistic.poller.rfc1213.in.SnmpIfTableResponse;
+import com.home.network.statistic.poller.rfc1213.in.SnmpTarget;
+import com.home.network.statistic.poller.rfc1213.in.SnmpIfTablePhyInfoRequest;
 import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +37,7 @@ public class IngestionService {
     private final StatusWifiStationRepo statusWifiStationRepo;
     //todo: implement way to securely store credentials
     private final Set<WebUICredentials> hostCred = Set.of(new WebUICredentials("admin", "12345678aA@", "192.168.100.248"));
-    private final Map<String, Rfc1213SnmpIgateTarget> rfc1213SnmpIgateTargets = Map.of("192.168.100.248", new Rfc1213SnmpIgateTarget("udp:192.168.100.248/161"));
+    private final Map<String, SnmpTarget> rfc1213SnmpIgateTargets = Map.of("192.168.100.248", new SnmpTarget("udp:192.168.100.248/161"));
 
     @Autowired
     public IngestionService(
@@ -76,7 +75,7 @@ public class IngestionService {
             // return future for parallel calling, return header as well to reauth later
             var webFuture = virtualThreadPool.submit(() -> getStatusWifiStationRouter(info));
 
-            // limit the columns to get in Rfc1213SnmpIgateIfTableRequest in the response by creating SnmpIfTablePhyInfoRequest, to reduce latency
+            // limit the columns to get in SnmpIfTableRequest in the response by creating SnmpIfTablePhyInfoRequest, to reduce latency
             // return future for parallel calling
             var snmpFuture = virtualThreadPool.submit(() -> new SnmpIfTablePhyInfoRequest().getResponse(snmpTg, tableUtils));
 
@@ -99,7 +98,7 @@ public class IngestionService {
                 webResponse = new WebResponse(webFuture.get().getBody());
             }
 
-            List<Rfc1213SnmpIgateIfTableResponse> snmpResponse = null;
+            List<SnmpIfTableResponse> snmpResponse = null;
             try {
                 snmpResponse = snmpFuture.get();
             } catch (Exception e) {

@@ -1,28 +1,26 @@
-package com.home.network.statistic.poller.rfc1213.igate.etl;
+package com.home.network.statistic.poller.rfc1213.etl;
 
-import com.home.network.statistic.poller.rfc1213.igate.out.Rfc1213IgateIftableTrafficEntity;
+import com.home.network.statistic.poller.rfc1213.out.IftableTrafficEntity;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class Rfc1213IgateTrafficHourlyCountTest {
+class TrafficHourlyCountTest {
 
     @Test
     void testConstructor() {
         // Arrange
         LocalDateTime pollTime = LocalDateTime.of(2023, 10, 1, 12, 0);
-        Rfc1213IgateIftableTrafficEntity entity = Rfc1213IgateIftableTrafficEntity.builder()
+        IftableTrafficEntity entity = IftableTrafficEntity.builder()
                 .pollTime(pollTime)
                 .ifPhysAddress(12345L)
                 .ifDescr("eth0")
                 .build();
 
         // Act
-        Rfc1213IgateTrafficHourlyCount count = new Rfc1213IgateTrafficHourlyCount(entity);
+        TrafficHourlyCount count = new TrafficHourlyCount(entity);
 
         // Assert
         assertEquals("2023-10-01", count.getDate());
@@ -37,16 +35,16 @@ class Rfc1213IgateTrafficHourlyCountTest {
     void testAdjustTraffic() {
         // Arrange
         LocalDateTime pollTime = LocalDateTime.of(2023, 10, 1, 12, 0);
-        Rfc1213IgateIftableTrafficEntity oldEntity = Rfc1213IgateIftableTrafficEntity.builder()
+        IftableTrafficEntity oldEntity = IftableTrafficEntity.builder()
                 .ifInOctets(1000L)
                 .ifOutOctets(2000L)
                 .build();
-        Rfc1213IgateIftableTrafficEntity newEntity = Rfc1213IgateIftableTrafficEntity.builder()
+        IftableTrafficEntity newEntity = IftableTrafficEntity.builder()
                 .ifInOctets(1500L)
                 .ifOutOctets(2500L)
                 .build();
-        Rfc1213IgateTrafficHourlyCount count = new Rfc1213IgateTrafficHourlyCount(
-                Rfc1213IgateIftableTrafficEntity.builder().pollTime(pollTime).ifPhysAddress(12345L).ifDescr("eth0").build()
+        TrafficHourlyCount count = new TrafficHourlyCount(
+                IftableTrafficEntity.builder().pollTime(pollTime).ifPhysAddress(12345L).ifDescr("eth0").build()
         );
 
         // Act
@@ -60,16 +58,16 @@ class Rfc1213IgateTrafficHourlyCountTest {
     @Test
     void testAdjustTrafficWithWrapAround() {
         // Arrange: simulate counter wrap-around (new < old)
-        Rfc1213IgateIftableTrafficEntity oldEntity = Rfc1213IgateIftableTrafficEntity.builder()
+        IftableTrafficEntity oldEntity = IftableTrafficEntity.builder()
                 .ifInOctets(4000L)
                 .ifOutOctets(3000L)
                 .build();
-        Rfc1213IgateIftableTrafficEntity newEntity = Rfc1213IgateIftableTrafficEntity.builder()
+        IftableTrafficEntity newEntity = IftableTrafficEntity.builder()
                 .ifInOctets(1000L) // less than old, so use new value
                 .ifOutOctets(500L)
                 .build();
-        Rfc1213IgateTrafficHourlyCount count = new Rfc1213IgateTrafficHourlyCount(
-                Rfc1213IgateIftableTrafficEntity.builder().pollTime(LocalDateTime.now()).ifPhysAddress(12345L).ifDescr("eth0").build()
+        TrafficHourlyCount count = new TrafficHourlyCount(
+                IftableTrafficEntity.builder().pollTime(LocalDateTime.now()).ifPhysAddress(12345L).ifDescr("eth0").build()
         );
 
         // Act
@@ -83,22 +81,22 @@ class Rfc1213IgateTrafficHourlyCountTest {
     @Test
     void testEqualsAndHashCode() {
         // Arrange
-        Rfc1213IgateTrafficHourlyCount count1 = new Rfc1213IgateTrafficHourlyCount(
-                Rfc1213IgateIftableTrafficEntity.builder()
+        TrafficHourlyCount count1 = new TrafficHourlyCount(
+                IftableTrafficEntity.builder()
                         .pollTime(LocalDateTime.of(2023, 10, 1, 12, 0))
                         .ifPhysAddress(12345L)
                         .ifDescr("eth0")
                         .build()
         );
-        Rfc1213IgateTrafficHourlyCount count2 = new Rfc1213IgateTrafficHourlyCount(
-                Rfc1213IgateIftableTrafficEntity.builder()
+        TrafficHourlyCount count2 = new TrafficHourlyCount(
+                IftableTrafficEntity.builder()
                         .pollTime(LocalDateTime.of(2023, 10, 1, 12, 0))
                         .ifPhysAddress(12345L)
                         .ifDescr("eth0")
                         .build()
         );
-        Rfc1213IgateTrafficHourlyCount count3 = new Rfc1213IgateTrafficHourlyCount(
-                Rfc1213IgateIftableTrafficEntity.builder()
+        TrafficHourlyCount count3 = new TrafficHourlyCount(
+                IftableTrafficEntity.builder()
                         .pollTime(LocalDateTime.of(2023, 10, 1, 13, 0))
                         .ifPhysAddress(67890L)
                         .ifDescr("eth1")

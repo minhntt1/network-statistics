@@ -2,7 +2,7 @@ package com.home.network.statistic.poller.igate.gw240.in;
 
 import com.home.network.statistic.poller.igate.gw240.out.StatusWifiStationEntity;
 import com.home.network.statistic.poller.igate.gw240.out.StatusWifiStationRaw;
-import com.home.network.statistic.poller.rfc1213.igate.in.Rfc1213SnmpIgateIfTableResponse;
+import com.home.network.statistic.poller.rfc1213.in.SnmpIfTableResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,13 +29,13 @@ public class WebResponse {
      * @param response snmp response
      * @return entity containing raw web + snmp response in json and poll time
      */
-    public StatusWifiStationEntity toStatusWifiStationEntity(List<Rfc1213SnmpIgateIfTableResponse> response) {
+    public StatusWifiStationEntity toStatusWifiStationEntity(List<SnmpIfTableResponse> response) {
         filterRedundantContent();
 
         return StatusWifiStationRaw.builder()
                 .webResponse(content)
                 .pollTime(LocalDateTime.now())
-                .listRaw(response.stream().map(Rfc1213SnmpIgateIfTableResponse::toSnmpIfTablePhyInfoResponseRaw).toList())
+                .listRaw(response.stream().map(SnmpIfTableResponse::toSnmpIfTablePhyInfoResponseRaw).toList())
                 .build()
                 .toStatusWifiStationEntity();
     }

@@ -1,4 +1,4 @@
-package com.home.network.statistic.poller.rfc1213.igate.in;
+package com.home.network.statistic.poller.rfc1213.in;
 
 import com.home.network.statistic.poller.util.VariableBindingUtil;
 import lombok.Getter;
@@ -9,18 +9,18 @@ import org.snmp4j.util.TableEvent;
 import java.time.Clock;
 
 @Getter
-public class Rfc1213SnmpIgateIpAddrTableResponse extends Rfc1213SnmpIgateResponse {
+public class SnmpIpAddrTableResponse extends SnmpResponse {
     private Integer ipAdEntAddr;
     private Integer ipAdEntIfIndex;
 
-    public Rfc1213SnmpIgateIpAddrTableResponse(TableEvent tableEvent) {
+    public SnmpIpAddrTableResponse(TableEvent tableEvent) {
         super(Clock.systemUTC().millis());
 
         for (VariableBinding variableBinding : tableEvent.getColumns()) {
             OID oid = variableBinding.getOid();
-            if (Rfc1213SnmpIgateIpAddrTableRequest.isOidIpAdEntAddr(oid))
+            if (SnmpIpAddrTableRequest.isOidIpAdEntAddr(oid))
                 this.ipAdEntAddr = VariableBindingUtil.parseIPAddress(variableBinding);
-            else if(Rfc1213SnmpIgateIpAddrTableRequest.isOidIpAdEntIfIndex(oid))
+            else if(SnmpIpAddrTableRequest.isOidIpAdEntIfIndex(oid))
                 this.ipAdEntIfIndex = VariableBindingUtil.parseInt(variableBinding);
         }
     }

@@ -1,28 +1,24 @@
-package com.home.network.statistic.poller.rfc1213.igate.out;
+package com.home.network.statistic.poller.rfc1213.out;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Nested;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DisplayName("Rfc1213IgateIftableTrafficEntity Unit Tests")
-class Rfc1213IgateIftableTrafficEntityTest {
+@DisplayName("IftableTrafficEntity Unit Tests")
+class IftableTrafficEntityTest {
 
-    private Rfc1213IgateIftableTrafficEntity entity;
+    private IftableTrafficEntity entity;
     private LocalDateTime testTime;
 
     @BeforeEach
     void setUp() {
         testTime = LocalDateTime.of(2023, 10, 15, 14, 30, 45);
-        entity = Rfc1213IgateIftableTrafficEntity.builder()
+        entity = IftableTrafficEntity.builder()
                 .id(1L)
                 .pollTime(testTime)
                 .ifIndex(1)
@@ -44,7 +40,7 @@ class Rfc1213IgateIftableTrafficEntityTest {
         @DisplayName("Should create entity with no-args constructor")
         void shouldCreateEntityWithNoArgsConstructor() {
             // When
-            Rfc1213IgateIftableTrafficEntity noArgsEntity = new Rfc1213IgateIftableTrafficEntity();
+            IftableTrafficEntity noArgsEntity = new IftableTrafficEntity();
 
             // Then
             assertNotNull(noArgsEntity);
@@ -56,7 +52,7 @@ class Rfc1213IgateIftableTrafficEntityTest {
         @DisplayName("Should create entity with all-args constructor")
         void shouldCreateEntityWithAllArgsConstructor() {
             // When
-            Rfc1213IgateIftableTrafficEntity allArgsEntity = new Rfc1213IgateIftableTrafficEntity(
+            IftableTrafficEntity allArgsEntity = new IftableTrafficEntity(
                     1L, testTime, 1, "Ethernet0/0", 123456789L, "1", "1", 1000L, 2000L, 19216811
             );
 
@@ -77,7 +73,7 @@ class Rfc1213IgateIftableTrafficEntityTest {
         @DisplayName("Should create entity with builder pattern")
         void shouldCreateEntityWithBuilder() {
             // When
-            Rfc1213IgateIftableTrafficEntity builderEntity = Rfc1213IgateIftableTrafficEntity.builder()
+            IftableTrafficEntity builderEntity = IftableTrafficEntity.builder()
                     .pollTime(testTime)
                     .ifIndex(2)
                     .ifDescr("Ethernet0/1")
@@ -154,7 +150,7 @@ class Rfc1213IgateIftableTrafficEntityTest {
         @DisplayName("Should return true when both entities have same date and hour")
         void shouldReturnTrueForSameDateHour() {
             // Given
-            Rfc1213IgateIftableTrafficEntity other = Rfc1213IgateIftableTrafficEntity.builder()
+            IftableTrafficEntity other = IftableTrafficEntity.builder()
                     .pollTime(LocalDateTime.of(2023, 10, 15, 14, 45, 30)) // Same date and hour
                     .build();
 
@@ -169,7 +165,7 @@ class Rfc1213IgateIftableTrafficEntityTest {
         @DisplayName("Should return false when entities have different date")
         void shouldReturnFalseForDifferentDate() {
             // Given
-            Rfc1213IgateIftableTrafficEntity other = Rfc1213IgateIftableTrafficEntity.builder()
+            IftableTrafficEntity other = IftableTrafficEntity.builder()
                     .pollTime(LocalDateTime.of(2023, 10, 16, 14, 30, 45)) // Different date
                     .build();
 
@@ -184,7 +180,7 @@ class Rfc1213IgateIftableTrafficEntityTest {
         @DisplayName("Should return false when entities have different hour")
         void shouldReturnFalseForDifferentHour() {
             // Given
-            Rfc1213IgateIftableTrafficEntity other = Rfc1213IgateIftableTrafficEntity.builder()
+            IftableTrafficEntity other = IftableTrafficEntity.builder()
                     .pollTime(LocalDateTime.of(2023, 10, 15, 15, 30, 45)) // Different hour
                     .build();
 
@@ -199,11 +195,11 @@ class Rfc1213IgateIftableTrafficEntityTest {
         @DisplayName("Should calculate correct transmit difference")
         void shouldCalculateCorrectTxDifference() {
             // Given
-            Rfc1213IgateIftableTrafficEntity oldEntity = Rfc1213IgateIftableTrafficEntity.builder()
+            IftableTrafficEntity oldEntity = IftableTrafficEntity.builder()
                     .ifOutOctets(1000L)
                     .build();
 
-            Rfc1213IgateIftableTrafficEntity newEntity = Rfc1213IgateIftableTrafficEntity.builder()
+            IftableTrafficEntity newEntity = IftableTrafficEntity.builder()
                     .ifOutOctets(1500L)
                     .build();
 
@@ -218,11 +214,11 @@ class Rfc1213IgateIftableTrafficEntityTest {
         @DisplayName("Should handle transmit counter overflow correctly")
         void shouldHandleTxCounterOverflow() {
             // Given
-            Rfc1213IgateIftableTrafficEntity oldEntity = Rfc1213IgateIftableTrafficEntity.builder()
+            IftableTrafficEntity oldEntity = IftableTrafficEntity.builder()
                     .ifOutOctets(Long.MAX_VALUE - 500L)
                     .build();
 
-            Rfc1213IgateIftableTrafficEntity newEntity = Rfc1213IgateIftableTrafficEntity.builder()
+            IftableTrafficEntity newEntity = IftableTrafficEntity.builder()
                     .ifOutOctets(1000L)
                     .build();
 
@@ -237,11 +233,11 @@ class Rfc1213IgateIftableTrafficEntityTest {
         @DisplayName("Should calculate correct receive difference")
         void shouldCalculateCorrectRxDifference() {
             // Given
-            Rfc1213IgateIftableTrafficEntity oldEntity = Rfc1213IgateIftableTrafficEntity.builder()
+            IftableTrafficEntity oldEntity = IftableTrafficEntity.builder()
                     .ifInOctets(2000L)
                     .build();
 
-            Rfc1213IgateIftableTrafficEntity newEntity = Rfc1213IgateIftableTrafficEntity.builder()
+            IftableTrafficEntity newEntity = IftableTrafficEntity.builder()
                     .ifInOctets(2500L)
                     .build();
 
@@ -256,11 +252,11 @@ class Rfc1213IgateIftableTrafficEntityTest {
         @DisplayName("Should handle receive counter overflow correctly")
         void shouldHandleRxCounterOverflow() {
             // Given
-            Rfc1213IgateIftableTrafficEntity oldEntity = Rfc1213IgateIftableTrafficEntity.builder()
+            IftableTrafficEntity oldEntity = IftableTrafficEntity.builder()
                     .ifInOctets(Long.MAX_VALUE - 300L)
                     .build();
 
-            Rfc1213IgateIftableTrafficEntity newEntity = Rfc1213IgateIftableTrafficEntity.builder()
+            IftableTrafficEntity newEntity = IftableTrafficEntity.builder()
                     .ifInOctets(1500L)
                     .build();
 
@@ -337,7 +333,7 @@ class Rfc1213IgateIftableTrafficEntityTest {
                     """;
 
             // When
-            Rfc1213IgateIftableTrafficEntity result = Rfc1213IgateIftableTrafficEntity.from(json);
+            IftableTrafficEntity result = IftableTrafficEntity.from(json);
 
             // Then
             assertNotNull(result);
@@ -355,7 +351,7 @@ class Rfc1213IgateIftableTrafficEntityTest {
         @DisplayName("Should return null when creating entity from null JSON")
         void shouldReturnNullFromNullJson() {
             // When
-            Rfc1213IgateIftableTrafficEntity result = Rfc1213IgateIftableTrafficEntity.from(null);
+            IftableTrafficEntity result = IftableTrafficEntity.from(null);
 
             // Then
             assertNull(result);
@@ -369,7 +365,7 @@ class Rfc1213IgateIftableTrafficEntityTest {
 
             // When & Then
             assertThrows(Exception.class, () -> {
-                Rfc1213IgateIftableTrafficEntity.from(malformedJson);
+                IftableTrafficEntity.from(malformedJson);
             });
         }
     }
@@ -383,7 +379,7 @@ class Rfc1213IgateIftableTrafficEntityTest {
         void shouldHandleNullPollTimeInSameDateHour() {
             // Given
             entity.setPollTime(null);
-            Rfc1213IgateIftableTrafficEntity other = Rfc1213IgateIftableTrafficEntity.builder()
+            IftableTrafficEntity other = IftableTrafficEntity.builder()
                     .pollTime(testTime)
                     .build();
 
