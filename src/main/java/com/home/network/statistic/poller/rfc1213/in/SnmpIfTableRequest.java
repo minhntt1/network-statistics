@@ -1,4 +1,4 @@
-package com.home.network.statistic.poller.rfc1213.igate.in;
+package com.home.network.statistic.poller.rfc1213.in;
 
 import org.snmp4j.smi.OID;
 import org.snmp4j.util.TableEvent;
@@ -6,7 +6,7 @@ import org.snmp4j.util.TableUtils;
 
 import java.util.List;
 
-public class Rfc1213SnmpIgateIfTableRequest extends Rfc1213SnmpIgateRequest<Rfc1213SnmpIgateIfTableResponse> {
+public class SnmpIfTableRequest extends SnmpRequest<SnmpIfTableResponse> {
     protected static final String ifIndex = "1.3.6.1.2.1.2.2.1.1.";
     protected static final String ifDescr = "1.3.6.1.2.1.2.2.1.2.";
     protected static final String ifPhysAddress = "1.3.6.1.2.1.2.2.1.6.";
@@ -57,7 +57,7 @@ public class Rfc1213SnmpIgateIfTableRequest extends Rfc1213SnmpIgateRequest<Rfc1
     }
 
     @Override
-    public List<Rfc1213SnmpIgateIfTableResponse> getResponse(Rfc1213SnmpIgateTarget target, TableUtils tableUtils) {
+    public List<SnmpIfTableResponse> getResponse(SnmpTarget target, TableUtils tableUtils) {
         List<TableEvent> tableEvents = tableUtils.getTable(
                 target.buildTarget(),
                 this.getRequestColumns(),
@@ -65,7 +65,7 @@ public class Rfc1213SnmpIgateIfTableRequest extends Rfc1213SnmpIgateRequest<Rfc1
         );
 
         return tableEvents.stream()
-                .map(Rfc1213SnmpIgateIfTableResponse::new)
+                .map(SnmpIfTableResponse::new)
                 .toList();
     }
 }

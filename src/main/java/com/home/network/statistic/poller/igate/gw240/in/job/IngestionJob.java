@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
-public class Igate240StatusWifiStationJob implements Job {
+public class IngestionJob implements Job {
     @Autowired(required = false)
     private IngestionService ingestionService;
 

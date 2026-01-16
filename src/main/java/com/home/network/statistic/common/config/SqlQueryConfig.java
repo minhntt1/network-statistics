@@ -35,10 +35,10 @@ public class SqlQueryConfig {
     }
 
     @SneakyThrows
-    @Bean(name = "rfc1213IgateQuery")
-    ListSqlQuery getListRfc1213IgateQuery() {
+    @Bean(name = "rfc1213Query")
+    ListSqlQuery getListRfc1213Query() {
         Properties properties = new Properties();
-        properties.loadFromXML(new ClassPathResource("etl_queries/rfc1213-igate-query.xml").getInputStream());
+        properties.loadFromXML(new ClassPathResource("etl_queries/rfc1213-query.xml").getInputStream());
         return new ListSqlQuery(properties);
     }
 

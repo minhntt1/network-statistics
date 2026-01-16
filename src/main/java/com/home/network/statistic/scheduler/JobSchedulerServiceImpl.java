@@ -8,9 +8,9 @@ import com.home.network.statistic.poller.aruba.iap.in.job.ArubaSnmpAiPollApInfoJ
 import com.home.network.statistic.poller.aruba.iap.in.job.ArubaSnmpAiPollClientInfoJob;
 import com.home.network.statistic.poller.aruba.iap.in.job.ArubaSnmpAiPollWlanTrafficJob;
 import com.home.network.statistic.poller.igate.gw240.etl.job.StatusWifiStationJob;
-import com.home.network.statistic.poller.igate.gw240.in.job.Igate240StatusWifiStationJob;
-import com.home.network.statistic.poller.rfc1213.igate.etl.job.Rfc1213IgateJob;
-import com.home.network.statistic.poller.rfc1213.igate.in.job.Rfc1213SnmpIgatePollingJob;
+import com.home.network.statistic.poller.igate.gw240.in.job.IngestionJob;
+import com.home.network.statistic.poller.rfc1213.etl.job.TrafficSummaryJob;
+import com.home.network.statistic.poller.rfc1213.in.job.SnmpPollingJob;
 import com.home.network.statistic.vendor.VendorJob;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,12 +44,12 @@ public class JobSchedulerServiceImpl implements JobSchedulerService {
         jobList.add(ArubaSnmpAiPollClientInfoJob.class);
         jobList.add(ArubaSnmpAiPollWlanTrafficJob.class);
         // rfc1213 igate
-        jobList.add(Rfc1213IgateJob.class);
-        jobList.add(Rfc1213SnmpIgatePollingJob.class);
+        jobList.add(TrafficSummaryJob.class);
+        jobList.add(SnmpPollingJob.class);
         // vendor poll job
         jobList.add(VendorJob.class);
         // igate240 web job
-        jobList.add(Igate240StatusWifiStationJob.class);
+        jobList.add(IngestionJob.class);
         jobList.add(StatusWifiStationJob.class);
     }
 

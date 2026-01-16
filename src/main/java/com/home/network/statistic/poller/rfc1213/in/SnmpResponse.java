@@ -1,4 +1,4 @@
-package com.home.network.statistic.poller.rfc1213.igate.in;
+package com.home.network.statistic.poller.rfc1213.in;
 
 import lombok.AllArgsConstructor;
 
@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 @AllArgsConstructor
-public class Rfc1213SnmpIgateResponse {
+public class SnmpResponse {
     private Long at;
 
     public LocalDateTime toCurrentLdt() {

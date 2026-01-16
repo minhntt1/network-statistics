@@ -1,4 +1,4 @@
-package com.home.network.statistic.poller.rfc1213.igate.etl.service;
+package com.home.network.statistic.poller.rfc1213.etl.service;
 
 import org.quartz.JobExecutionContext;
 

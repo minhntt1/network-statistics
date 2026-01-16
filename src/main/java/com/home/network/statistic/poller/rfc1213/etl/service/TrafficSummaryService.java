@@ -1,8 +1,8 @@
-package com.home.network.statistic.poller.rfc1213.igate.etl.service;
+package com.home.network.statistic.poller.rfc1213.etl.service;
 
 import com.home.network.statistic.common.model.ListSqlQuery;
-import com.home.network.statistic.poller.rfc1213.igate.etl.Rfc1213IgateTrafficHourlyCount;
-import com.home.network.statistic.poller.rfc1213.igate.out.Rfc1213IgateIftableTrafficEntity;
+import com.home.network.statistic.poller.rfc1213.etl.TrafficHourlyCount;
+import com.home.network.statistic.poller.rfc1213.out.IftableTrafficEntity;
 import io.micrometer.core.annotation.Timed;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
@@ -19,14 +19,14 @@ import java.util.HashMap;
 @Service
 @Slf4j
 @Profile({"dev-executor","prd-executor"})
-public class Rfc1213IgateService implements BaseService {
+public class TrafficSummaryService implements BaseService {
     private final JdbcTemplate jdbcTemplate;
     private final ApplicationContext applicationContext;
     private final ListSqlQuery listSqlQuery;
 
-    public Rfc1213IgateService(@Qualifier("appJdbcTemplate") JdbcTemplate jdbcTemplate,
-                               ApplicationContext applicationContext,
-                               @Qualifier("rfc1213IgateQuery") ListSqlQuery listSqlQuery) {
+    public TrafficSummaryService(@Qualifier("appJdbcTemplate") JdbcTemplate jdbcTemplate,
+                                 ApplicationContext applicationContext,
+                                 @Qualifier("rfc1213Query") ListSqlQuery listSqlQuery) {
         this.jdbcTemplate = jdbcTemplate;
         this.applicationContext = applicationContext;
         this.listSqlQuery = listSqlQuery;
@@ -64,9 +64,9 @@ public class Rfc1213IgateService implements BaseService {
         var copyState = new HashMap<>(stateMap);
 
         // storing count state
-        var mapCountState = new HashMap<Rfc1213IgateTrafficHourlyCount, Rfc1213IgateTrafficHourlyCount>();
+        var mapCountState = new HashMap<TrafficHourlyCount, TrafficHourlyCount>();
 
-        try (var stream = jdbcTemplate.queryForStream(listSqlQuery.getQueryValue("getAllStaging"), new BeanPropertyRowMapper<>(Rfc1213IgateIftableTrafficEntity.class))) {
+        try (var stream = jdbcTemplate.queryForStream(listSqlQuery.getQueryValue("getAllStaging"), new BeanPropertyRowMapper<>(IftableTrafficEntity.class))) {
             for (var it = stream.iterator(); it.hasNext();) {
                 var currState = it.next();
 
@@ -75,10 +75,10 @@ public class Rfc1213IgateService implements BaseService {
                     continue;
 
                 var currStateKey = currState.obtainJobStateKey();
-                var oldState = Rfc1213IgateIftableTrafficEntity.from(stateMap.getString(currStateKey));
+                var oldState = IftableTrafficEntity.from(stateMap.getString(currStateKey));
 
                 if (oldState != null) {
-                    var count = new Rfc1213IgateTrafficHourlyCount(currState);
+                    var count = new TrafficHourlyCount(currState);
                     mapCountState.computeIfAbsent(count, kk -> count).adjustTraffic(oldState, currState);
                 }
 
@@ -90,7 +90,7 @@ public class Rfc1213IgateService implements BaseService {
         for (var key : copyState.keySet())
             stateMap.remove(key);
 
-        var batchUpdateDb = Rfc1213IgateTrafficHourlyCount.obtainMappedRow(mapCountState);
+        var batchUpdateDb = TrafficHourlyCount.obtainMappedRow(mapCountState);
 
         if (!batchUpdateDb.isEmpty()) {
             // create temp tbl
@@ -124,7 +124,7 @@ public class Rfc1213IgateService implements BaseService {
     }
 
     @Override
-    @Timed(value = "rfc1213.igate.etl.iftraffic")
+    @Timed(value = "rfc1213.etl.iftraffic")
     public void start(JobExecutionContext context) {
         log.info("start");
 
@@ -135,7 +135,7 @@ public class Rfc1213IgateService implements BaseService {
         insertIntoTimeDimHourNorm();
 
         // summarize
-        applicationContext.getBean(Rfc1213IgateService.class).summarizeData(context);
+        applicationContext.getBean(TrafficSummaryService.class).summarizeData(context);
 
         // clean up batch
         cleanUpBatch();
