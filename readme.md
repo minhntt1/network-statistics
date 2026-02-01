@@ -3,6 +3,11 @@ A project used to ingest and analyze data from internal network devices, featuri
 
 ![screenshot](docs/dashboard.png)
 
+## Tech stack
+- Backend: Spring framework, Spring JDBC Template, Quartz Scheduler, SNMP4J, Swagger
+- Frontend: Grafana
+- DB: MySQL
+
 ## Project structure
 ![](docs/package-structure.png)
 
