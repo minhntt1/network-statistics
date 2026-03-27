@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+    <entry key="addUndefinedIpDim">
+        <![CDATA[
+            insert ignore into ip_dim (ip_key, ipv4, ipv6) values(
+                -2147483648, 0, 0
+            );
+        ]]>
+    </entry>
+    <entry key="insertIntoDateDim">
+        <![CDATA[
+            insert ignore into date_dim(date) (
+                select distinct date(t1.poll_time)
+                from tplink_deco_client_device_wlan_stg t1
+                left join date_dim dd on date(t1.poll_time) = dd.date
+                where dd.date_key is null
+            );
+        ]]>
+    </entry>
+    <entry key="insertIntoTimeDim">
+        <![CDATA[
+            insert ignore into time_dim(time) (
+                select
+                distinct
+                time_to_sec(time(t1.poll_time))
+                from tplink_deco_client_device_wlan_stg t1
+                left join time_dim td on time_to_sec(time(t1.poll_time))=td.time
+                where td.time_key is null
+            )
+        ]]>
+    </entry>
+    <entry key="insertIntoTimeDimHourNorm">
+        <![CDATA[
+            insert ignore into time_dim(time) (
+                select
+                distinct time_to_sec(date_format(time(t1.poll_time),'%H:00:00'))
+                from tplink_deco_client_device_wlan_stg t1
+                left join time_dim td on time_to_sec(date_format(time(t1.poll_time),'%H:00:00'))=td.time
+                where td.time_key is null
+            )
+        ]]>
+    </entry>
+    <entry key="getAllStaging">
+        <![CDATA[
+            select * from tplink_deco_client_device_wlan_stg
+            order by id -- order id to get increasing time (id is primary key and indexed, ordered, but we want it more explicit)
+        ]]>
+    </entry>
+
+    <!-- temp table for gw iface dim -->
+    <entry key="createTempTableForGwIfaceDimNormalize">
+        <![CDATA[
+            create temporary table  tmp_gw_device_dim_normalize (
+                router_mac bigint not null,
+                wlan_name varchar(255) not null
+            );
+        ]]>
+    </entry>
+    <entry key="insertIntoTempTableForGwIfaceDimNormalize">
+        <![CDATA[
+            insert into tmp_gw_device_dim_normalize values(?,?)
+        ]]>
+    </entry>
+    <entry key="dropTempTableForGwIfaceDimNormalize">
+        drop table tmp_gw_device_dim_normalize;
+    </entry>
+    <!-- following code should be not inside a transaction   -->
+    <entry key="insertIntoGwIfaceDim">
+        <![CDATA[
+            insert ignore into gw_iface_dim(iface_mac,iface_name) (
+                select
+                distinct
+                t1.router_mac,
+                t1.wlan_name
+                from tmp_gw_device_dim_normalize t1
+                left join gw_iface_dim t2
+                on t1.router_mac=t2.iface_mac
+                and t1.wlan_name=t2.iface_name
+                where t2.iface_key is null
+            );
+        ]]>
+    </entry>
+
+    <!-- temp table for device dim -->
+    <entry key="createTempTableForDeviceDimNormalize">
+        <![CDATA[
+            create temporary table  tmp_device_dim_normalize (
+                client_mac bigint not null,
+                client_name varchar(255) not null,
+                client_type tinyint not null
+            );
+        ]]>
+    </entry>
+    <entry key="insertIntoTempTableForDeviceDimNormalize">
+        <![CDATA[
+            insert into tmp_device_dim_normalize values(?,?,?)
+        ]]>
+    </entry>
+    <entry key="dropTempTableForDeviceDimNormalize">
+        drop table tmp_device_dim_normalize;
+    </entry>
+    <!-- following code should be not inside a transaction   -->
+    <!--  but the src code need a transaction because to scope it within one conenction, have to review carefully  -->
+    <entry key="insertIntoDeviceDim">
+        <![CDATA[
+            insert ignore into network_statistics.device_dim(device_mac,device_name,device_iface_wifi) (
+                select
+                distinct
+                t1.client_mac,
+                t1.client_name,
+                t1.client_type
+                from tmp_device_dim_normalize t1
+                left join device_dim t2
+                on t1.client_mac=t2.device_mac
+                and t1.client_name=t2.device_name
+                and t1.client_type=t2.device_iface_wifi
+                where t2.device_key is null
+            );
+        ]]>
+    </entry>
+
+    <!-- temp table for ip dim -->
+    <entry key="createTempTableForIpDimNormalize">
+        <![CDATA[
+            create temporary table  tmp_ip_dim_normalize (
+                ipv4 int not null
+            );
+        ]]>
+    </entry>
+    <entry key="insertIntoTempTableForIpDimNormalize">
+        <![CDATA[
+            insert into tmp_ip_dim_normalize values(?)
+        ]]>
+    </entry>
+    <entry key="dropTempTableForIpDimNormalize">
+        drop table tmp_ip_dim_normalize;
+    </entry>
+    <entry key="insertIntoIpDim">
+        <![CDATA[
+            insert ignore into network_statistics.ip_dim(ipv4) (
+                select
+                distinct
+                t1.ipv4
+                from tmp_ip_dim_normalize t1
+                left join ip_dim t2
+                on t1.ipv4 = t2.ipv4
+                where t2.ip_key is null
+            );
+        ]]>
+    </entry>
+
+    <!--  temp table for wlan connect events  -->
+    <entry key="createTempForUpdateFactTableDeviceWlanConnections">
+        create temporary table tmp_device_wlan_connections_fact (
+            `date_connect` date,        --
+            `time_connect` int,         --
+            `device_name` varchar(255), --
+            `device_mac` bigint,        --
+            `device_type` int,          --
+            `device_ipv4` int,          --
+            `router_mac` bigint,        --
+            `wlan_name` varchar(255),   --
+            `connect_status` int        --
+        )
+    </entry>
+    <entry key="insertTmpFactToTempTableUpdateFactTableDeviceWlanConnections">
+        insert into tmp_device_wlan_connections_fact
+        values (?,?,?,?,?,?,?,?,?)
+    </entry>
+    <entry key="dropTempForUpdateFactTableDeviceWlanConnections">
+        drop table tmp_device_wlan_connections_fact
+    </entry>
+    <entry key="updateFactTableDeviceWlanConnections">
+        <![CDATA[
+            insert ignore into device_wlan_connections_fact (
+				select
+
+				dd.date_key,
+				td.time_key,
+				dd1.device_key,
+				id.ip_key,
+				ad.ap_key,
+				gid.iface_key,
+				ifnull(vd.vendor_key,-2147483648),
+				ifnull(vd1.vendor_key,-2147483648),
+				aidi.connect_status
+
+				from tmp_device_wlan_connections_fact aidi
+
+				join date_dim dd on dd.date_key=(
+					select date_key from
+					date_dim
+					where aidi.date_connect=date
+				)
+				join time_dim td on td.time_key=(
+					select time_key from
+					time_dim
+					where aidi.time_connect=time
+				)
+				join device_dim dd1 on dd1.device_key=(
+					select device_key
+					from device_dim
+					where aidi.device_type=device_iface_wifi
+					and aidi.device_mac=device_mac
+					and aidi.device_name=device_name
+				)
+				join ip_dim id on id.ip_key=(
+					select ip_key
+					from ip_dim
+					where aidi.device_ipv4=ipv4
+				)
+				join ap_dim ad on ad.ap_key=(
+					select ap_key
+					from ap_dim
+					where ap_key=-2147483648
+				)
+				join gw_iface_dim gid on gid.iface_key=(
+					select iface_key
+					from gw_iface_dim
+					where aidi.router_mac=iface_mac
+					and aidi.wlan_name=iface_name
+					and iface_phy_name is null
+				)
+				left join vendor_dim vd on vd.vendor_key=(
+					select vendor_key from
+					vendor_dim
+					where aidi.device_mac>>24=vendor_prefix
+				)
+				left join vendor_dim vd1 on vd1.vendor_key=(
+					select vendor_key from
+					vendor_dim
+					where aidi.router_mac>>24=vendor_prefix
+				)
+			)
+        ]]>
+    </entry>
+
+    <!-- create temp tbl for client traffic   -->
+    <!--this step is to normalize device traffic-->
+    <entry key="createTempForUpdateFactTableDeviceTrafficByHour">
+        create temporary table tmp_device_traffic_by_hour_fact (
+            `date` date,
+            `time` int,
+            `device_mac` bigint,
+            `device_name` varchar(255),
+            `device_type` int,
+            `transmission_bytes_val` bigint
+        )
+    </entry>
+    <entry key="insertTmpFactToTempTableUpdateFactTableDeviceTrafficByHour">
+        insert into tmp_device_traffic_by_hour_fact
+        values (?,?,?,?,?,?)
+    </entry>
+    <entry key="dropTempForUpdateFactTableDeviceTrafficByHour">
+        drop table tmp_device_traffic_by_hour_fact
+    </entry>
+    <entry key="updateFactTableDeviceTrafficByHour">
+        <![CDATA[
+            insert into network_statistics.device_traffic_by_hour_fact(date_key,time_key,device_key,transmission_bytes) (
+                select
+
+                dd.date_key,
+                td.time_key,
+                dd1.device_key,
+                aidi.transmission_bytes_val
+
+                from tmp_device_traffic_by_hour_fact aidi
+
+                join date_dim dd on dd.date_key=(
+                    select date_key from
+                    date_dim
+                    where aidi.date=date
+                )
+                join time_dim td on td.time_key=(
+                    select time_key from
+                    time_dim
+                    where aidi.time=time
+                )
+                join device_dim dd1 on dd1.device_key=(
+                    select device_key from
+                    device_dim
+                    where aidi.device_type=device_iface_wifi
+                    and aidi.device_mac=device_mac
+                    and aidi.device_name=device_name
+                )
+			)
+			on duplicate key update transmission_bytes=transmission_bytes+transmission_bytes_val
+        ]]>
+    </entry>
+
+    <!-- following clean up queries should be outside main transaction -->
+    <entry key="copyStgToArchive">
+        insert into tplink_deco_client_device_wlan_archive(poll_time, raw_data)
+        select poll_time, raw_data from tplink_deco_client_device_wlan_stg
+    </entry>
+    <entry key="dropCurrentStg">
+        <![CDATA[
+            drop table tplink_deco_client_device_wlan_stg
+        ]]>
+    </entry>
+    <entry key="createNewStg">
+        <![CDATA[
+            create table if not exists
+            tplink_deco_client_device_wlan_stg like tplink_deco_client_device_wlan_stg_ingest
+        ]]>
+    </entry>
+    <entry key="moveStgToIngest">
+        <![CDATA[
+            rename table
+            tplink_deco_client_device_wlan_stg to tmp_tplink_deco_client_device_wlan_stg,
+            tplink_deco_client_device_wlan_stg_ingest to tplink_deco_client_device_wlan_stg,
+            tmp_tplink_deco_client_device_wlan_stg to tplink_deco_client_device_wlan_stg_ingest
+        ]]>
+    </entry>
+</properties>
