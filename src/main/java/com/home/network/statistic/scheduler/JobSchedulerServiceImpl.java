@@ -11,6 +11,9 @@ import com.home.network.statistic.poller.igate.gw240.etl.job.StatusWifiStationJo
 import com.home.network.statistic.poller.igate.gw240.in.job.IngestionJob;
 import com.home.network.statistic.poller.rfc1213.etl.job.TrafficSummaryJob;
 import com.home.network.statistic.poller.rfc1213.in.job.SnmpPollingJob;
+import com.home.network.statistic.poller.tplink.deco.etl.ClientDeviceJob;
+import com.home.network.statistic.poller.tplink.deco.etl.DeviceInfoJob;
+import com.home.network.statistic.poller.tplink.deco.in.FetchTelemetryJob;
 import com.home.network.statistic.vendor.VendorJob;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +54,10 @@ public class JobSchedulerServiceImpl implements JobSchedulerService {
         // igate240 web job
         jobList.add(IngestionJob.class);
         jobList.add(StatusWifiStationJob.class);
+        // tplink deco job
+        jobList.add(FetchTelemetryJob.class);
+        jobList.add(ClientDeviceJob.class);
+        jobList.add(DeviceInfoJob.class);
     }
 
     @Override

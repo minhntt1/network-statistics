@@ -49,4 +49,21 @@ public class SqlQueryConfig {
         properties.loadFromXML(new ClassPathResource("etl_queries/igate240-status-wifi-station.xml").getInputStream());
         return new ListSqlQuery(properties);
     }
+
+    @SneakyThrows
+    @Bean(name = "tpLinkDecoQuery")
+    ListSqlQuery getListTpLinkDeco() {
+        Properties properties = new Properties();
+        properties.loadFromXML(new ClassPathResource("etl_queries/tplink-deco-query.xml").getInputStream());
+        return new ListSqlQuery(properties);
+    }
+
+    @SneakyThrows
+    @Bean(name = "tpLinkDecoDeviceQuery")
+    ListSqlQuery getListTpLinkDecoDeviceQuery() {
+        Properties properties = new Properties();
+        properties.loadFromXML(new ClassPathResource("etl_queries/tplink-deco-device-query.xml").getInputStream());
+        return new ListSqlQuery(properties);
+    }
 }
+

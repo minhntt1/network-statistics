@@ -20,6 +20,28 @@ A project used to ingest and analyze data from internal network devices, featuri
 - prd-executor: used to run executor instances inside container environment using container hostname (ex: mysql)
 - prd-scheduler:  used to run scheduler instances inside container environment using container hostname (ex: mysql)
 
+# Create archive, staging, ingestion table
+```sql
+CREATE TABLE `<data>_stg` (
+                           `id` int NOT NULL AUTO_INCREMENT,
+                           `poll_time` datetime NOT NULL,
+                           `raw_data` json DEFAULT NULL COMMENT 'use json to handle schema change',
+                           PRIMARY KEY (`id`,`poll_time`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+create table <data>_archive like <data>_stg;
+create table <data>_stg_ingest like <data>_stg;
+alter table <data>_archive partition by range (year(poll_time))
+(
+    partition p2025 values less than(2025) engine = innodb,
+    partition p2026 values less than(2026) engine = innodb,
+    partition p2027 values less than(2027) engine = innodb,
+    partition p2028 values less than(2028) engine = innodb,
+    partition p2029 values less than(2029) engine = innodb,
+    partition p2030 values less than(2030) engine = innodb,
+    partition p9999 values less than(9999) engine = innodb
+);
+```
+
 # Common tasks
 Run unit tests
 ```

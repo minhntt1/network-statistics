@@ -49,7 +49,7 @@
     <entry key="createTempTableForDeviceDimNormalize">
         <![CDATA[
             create temporary table  tmp_device_dim_normalize (
-                device_mac varchar(255) not null
+                device_mac bigint not null
             );
         ]]>
     </entry>

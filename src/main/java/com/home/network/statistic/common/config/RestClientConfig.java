@@ -1,5 +1,6 @@
 package com.home.network.statistic.common.config;
 
+import lombok.SneakyThrows;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatusCode;
@@ -14,11 +15,13 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 
 @Configuration
 public class RestClientConfig {
     @Bean
-    RestClient insecureRestClient() throws NoSuchAlgorithmException, KeyManagementException {
+    @SneakyThrows
+    HttpClient httpClient() {
         X509TrustManager trustAll = new X509TrustManager() {
             public void checkClientTrusted(X509Certificate[] c, String a) {}
             public void checkServerTrusted(X509Certificate[] c, String a) {}
@@ -30,10 +33,14 @@ public class RestClientConfig {
 
         System.setProperty("jdk.internal.httpclient.disableHostnameVerification", "true");
 
-        HttpClient client = HttpClient.newBuilder()
+        return HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(60))     // set timeout for all connections, increase timeout to avoid disconnect detection error
                 .sslContext(ctx)
                 .build();
+    }
 
+    @Bean
+    RestClient insecureRestClient(HttpClient client) {
         return RestClient.builder()
                 .requestFactory(new JdkClientHttpRequestFactory(client))
                 .defaultStatusHandler(HttpStatusCode::isError, (req, resp) -> {})
