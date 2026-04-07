@@ -10,13 +10,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.net.http.HttpClient;
-import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpResponse;
+import java.nio.channels.ClosedChannelException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -45,8 +43,10 @@ public class FetchTelemetryServiceImpl implements FetchTelemetryService {
 
     public void handleConnectionException(Exception e) {
         log.error("error", e);
-        // when connection to router timeout -> consider it down and put empty record into db to detect connect/disconnect status later
-        if (e instanceof HttpConnectTimeoutException) {
+        // when connection to router closed
+        // -> consider it down and put empty record into db to detect connect/disconnect status later
+        if (e instanceof ClosedChannelException) {
+            log.error("ap connection error");
             insertEmptyRecordsToDb();
         }
     }
@@ -152,8 +152,7 @@ public class FetchTelemetryServiceImpl implements FetchTelemetryService {
         try {
             deviceList = httpClient.send(webRequestExtra.getRequestFindDevices(), HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
-            log.error("error", e);
-            insertEmptyRecordsToDb();
+            handleConnectionException(e);
             return;
         }
 
