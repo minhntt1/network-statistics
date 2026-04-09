@@ -16,6 +16,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 @Configuration
 public class RestClientConfig {
@@ -34,7 +35,6 @@ public class RestClientConfig {
         System.setProperty("jdk.internal.httpclient.disableHostnameVerification", "true");
 
         return HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(60))     // set timeout for all connections, increase timeout to avoid disconnect detection error
                 .sslContext(ctx)
                 .build();
     }
