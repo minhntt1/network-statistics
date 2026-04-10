@@ -17,8 +17,17 @@ public class WebResponseEncrypted {
         return JsonUtil.fromJson(json, WebResponseEncrypted.class);
     }
 
+    public boolean checkInvalidData() {
+        return data == null || data.isBlank();
+    }
+
     @SneakyThrows
     public WebResponse toJsonDecryptAES(WebEncryptor we) {
-        return we.decryptResponse(this);    // todo
+        return we.decryptResponse(this);
+    }
+
+    @SneakyThrows
+    public WebResponse toJsonDecryptAES(WebRequestExtra we) {
+        return we.getWebEncryptor().decryptResponse(this);
     }
 }

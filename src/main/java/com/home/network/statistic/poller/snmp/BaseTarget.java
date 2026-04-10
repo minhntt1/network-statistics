@@ -1,6 +1,10 @@
 package com.home.network.statistic.poller.snmp;
 
+import com.home.network.statistic.common.util.JsonUtil;
+import com.home.network.statistic.poller.authentication.CredentialAbstract;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.PDU;
 import org.snmp4j.smi.Address;
@@ -9,8 +13,10 @@ import org.snmp4j.smi.OctetString;
 import org.snmp4j.util.DefaultPDUFactory;
 import org.snmp4j.util.PDUFactory;
 
+@Getter
+@NoArgsConstructor
 @AllArgsConstructor
-public class BaseTarget {
+public class BaseTarget implements CredentialAbstract {
     private Integer timeout = 2500;
     private Integer retries = 2;
     private String community = "public";
@@ -53,5 +59,10 @@ public class BaseTarget {
         return "BaseTarget{" +
                 "address='" + address + '\'' +
                 '}';
+    }
+
+    @Override
+    public String serializeToJson() {
+        return JsonUtil.toJson(this);
     }
 }

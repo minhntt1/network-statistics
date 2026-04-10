@@ -7,7 +7,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController("/api/scheduler")
+@RestController
+@RequestMapping("/api/scheduler")
 @Profile({"dev-scheduler", "prd-scheduler",  "dev-admin", "prd-admin"})
 @RequiredArgsConstructor
 public class JobSchedulerController {
