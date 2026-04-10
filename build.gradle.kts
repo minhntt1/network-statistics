@@ -24,6 +24,7 @@ repositories {
 }
 
 dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     // https://mvnrepository.com/artifact/org.snmp4j/snmp4j
     implementation("org.snmp4j:snmp4j:3.9.6")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")

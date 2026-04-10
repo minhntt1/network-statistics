@@ -18,7 +18,7 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import java.util.Properties;
 
 @Configuration
-@Profile({"dev-executor","prd-executor"})
+@Profile({"dev-executor","prd-executor","dev-admin", "prd-admin"})
 @EnableJpaRepositories(
         basePackages = {
             "com.home.network.statistic.poller.aruba.iap.out",

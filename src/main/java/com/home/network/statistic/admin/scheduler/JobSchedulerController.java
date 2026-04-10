@@ -1,4 +1,4 @@
-package com.home.network.statistic.scheduler;
+package com.home.network.statistic.admin.scheduler;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -7,13 +7,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@Profile({"dev-scheduler", "prd-scheduler"})
+@RestController("/api/scheduler")
+@Profile({"dev-scheduler", "prd-scheduler",  "dev-admin", "prd-admin"})
 @RequiredArgsConstructor
 public class JobSchedulerController {
     private final JobSchedulerService jobSchedulerService;
 
-    @GetMapping("/scheduler")
+    @GetMapping("/list")
     @Operation(summary = "Get list of registered scheduler beans")
     public List<SchedulerDTO> getScheduler() {
         return jobSchedulerService.getSchedulerNameList();

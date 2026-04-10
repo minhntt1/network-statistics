@@ -1,4 +1,4 @@
-package com.home.network.statistic.scheduler;
+package com.home.network.statistic.admin.scheduler;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;

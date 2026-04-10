@@ -1,4 +1,4 @@
-package com.home.network.statistic.scheduler;
+package com.home.network.statistic.admin.scheduler;
 
 import com.home.network.statistic.common.util.SchedulerUtil;
 import com.home.network.statistic.poller.aruba.iap.etl.job.ApInfoJob;
@@ -30,7 +30,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Service
-@Profile({"dev-scheduler", "prd-scheduler"})
+@Profile({"dev-scheduler", "prd-scheduler", "dev-admin", "prd-admin"})
 @RequiredArgsConstructor
 @Slf4j
 // must wrap scheduler inside @transactional because quartz connection is not auto commit
