@@ -147,10 +147,10 @@ public class FetchTelemetryServiceImpl implements FetchTelemetryService {
         }
 
         // get device list
-        HttpResponse<String> deviceList;
+        WebResponseExtra deviceList;
 
         try {
-            deviceList = httpClient.send(webRequestExtra.getRequestFindDevices(), HttpResponse.BodyHandlers.ofString());
+            deviceList = new WebResponseExtra(httpClient.send(webRequestExtra.getRequestFindDevices(), HttpResponse.BodyHandlers.ofString()));
         } catch (Exception e) {
             handleConnectionException(e);
             return;
@@ -158,7 +158,8 @@ public class FetchTelemetryServiceImpl implements FetchTelemetryService {
 
         // at this step, if there are token and k,v, but still have error in request
         // have to reauth again
-        if (deviceList.statusCode() != 200) {
+        // handle case when body string is empty
+        if (deviceList.hasErrorStringStatus()) {
             try {
                 if (!initRequestMetadata()) {
                     log.info("failure during reauth");
@@ -170,7 +171,7 @@ public class FetchTelemetryServiceImpl implements FetchTelemetryService {
             }
         }
 
-        var bodyDeviceList = WebResponseEncrypted.from(deviceList.body()).toJsonDecryptAES(webRequestExtra.getWebEncryptor());
+        var bodyDeviceList = WebResponseEncrypted.from(deviceList.getStringBody()).toJsonDecryptAES(webRequestExtra.getWebEncryptor());
         var deviceMac = bodyDeviceList.getDeviceMacs();
 
         // because web request is slow, have to request in parallel
