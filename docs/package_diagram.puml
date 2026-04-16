@@ -1,0 +1,103 @@
+@startuml
+
+package "com.home.network.statistic" {
+    package "admin" {
+        package "admin.web" as admin_web
+        package "admin.scheduler" as admin_scheduler
+    }
+
+    package "common" {
+        package "common.config" as common_config
+        package "common.model" as common_model
+        package "common.util" as common_util
+    }
+
+    package "poller" {
+        package "authentication"
+        package "snmp"
+        package "poller.util" as poller_util
+        
+        package "aruba.iap" {
+            package "aruba.iap.in" as aruba_in
+            package "aruba.iap.etl" as aruba_etl
+            package "aruba.iap.out" as aruba_out
+        }
+        
+        package "igate.gw240" {
+            package "igate.gw240.in" as igate_in
+            package "igate.gw240.etl" as igate_etl
+            package "igate.gw240.out" as igate_out
+        }
+        
+        package "rfc1213" {
+            package "rfc1213.in" as rfc_in
+            package "rfc1213.etl" as rfc_etl
+            package "rfc1213.out" as rfc_out
+        }
+        
+        package "tplink.deco" {
+            package "tplink.deco.in" as tplink_in
+            package "tplink.deco.etl" as tplink_etl
+            package "tplink.deco.out" as tplink_out
+        }
+    }
+
+    package "vendor" {
+    }
+
+    ' Define dependencies
+    admin_web --> common_util : uses utils
+    admin_scheduler --> common_util : uses scheduling/util
+    admin_scheduler --> common_model : uses trigger/job models
+    admin_scheduler --> authentication : uses auth logic
+    admin_scheduler --> aruba_in : triggers polling jobs
+    admin_scheduler --> aruba_etl : triggers etl jobs
+    admin_scheduler --> igate_in : triggers polling jobs
+    admin_scheduler --> igate_etl : triggers etl jobs
+    admin_scheduler --> rfc_in : triggers polling jobs
+    admin_scheduler --> rfc_etl : triggers etl jobs
+    admin_scheduler --> tplink_in : triggers polling jobs
+    admin_scheduler --> tplink_etl : triggers etl jobs
+    admin_scheduler --> vendor : triggers custom vendor jobs
+
+    ' Package internals
+    ' The 'in' packages poll data and interact with 'out' (persistence)
+    ' The 'etl' packages process and write data to 'out' (persistence)
+
+    ' Dependencies on snmp package
+    aruba_in ..> snmp : uses base snmp classes
+    igate_in ..> snmp : uses base snmp classes
+    rfc_in ..> snmp : uses base snmp classes
+    tplink_in ..> snmp : uses base snmp classes
+
+    ' Dependencies on common
+'    common_util <.. aruba_in
+'    common_util <.. aruba_etl
+'    common_model <.. aruba_etl
+'
+'    common_util <.. igate_in
+'    common_util <.. igate_etl
+'    common_model <.. igate_etl
+'
+'    common_util <.. rfc_in
+'    common_util <.. rfc_etl
+'    common_model <.. rfc_etl
+'
+'    common_util <.. tplink_in
+'    common_util <.. tplink_etl
+'    common_model <.. tplink_etl
+
+    ' Data flow/persistence
+    aruba_in ..> aruba_out : queries/writes
+    aruba_etl ..> aruba_out : queries/writes
+
+    igate_in ..> igate_out : queries/writes
+    igate_etl ..> igate_out : queries/writes
+
+    rfc_in ..> rfc_out : queries/writes
+    rfc_etl ..> rfc_out : queries/writes
+
+    tplink_in ..> tplink_out : queries/writes
+    tplink_etl ..> tplink_out : queries/writes
+}
+@enduml
