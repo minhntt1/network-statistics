@@ -42,7 +42,7 @@ public class WebRequest {
     }
 
     public void addEncPassParam(WebEncryptor we) {
-        params.put("password", we.getEncryptPassForAuth());
+        params.put("password", we.extEncryptPassForAuth());
     }
 
     public String toJson() {

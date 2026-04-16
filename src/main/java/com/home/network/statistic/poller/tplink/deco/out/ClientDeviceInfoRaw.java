@@ -35,6 +35,12 @@ public class ClientDeviceInfoRaw {
         wlanInfoRaw = new ArrayList<>();
     }
 
+    public ClientDeviceInfoRaw(LocalDateTime pollTime, List<WlanInfoRaw> wlanInfoRaw) {
+        this.pollTime = pollTime;
+        this.mapDeviceToClient = new HashMap<>();
+        this.wlanInfoRaw = wlanInfoRaw;
+    }
+
     // create empty record to insert to db to prevent case when no data in db -> can't trigger state removal code in worker
     public static ClientDeviceInfoRaw initEmptyRecord() {
         return new ClientDeviceInfoRaw();

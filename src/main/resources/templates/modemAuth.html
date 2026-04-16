@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Modem Authentication Data</title>
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+</head>
+<body>
+    <h2><a th:href="@{/web/modem/auth/getListAuthInfo.do}">Modem AuthData</a></h2>
+
+    <div th:if="${result != null}">
+        <p th:if="${result}" style="color: green;">Operation successful!</p>
+        <p th:unless="${result}" style="color: red;">Operation failed!</p>
+    </div>
+
+    <form th:action="@{/web/modem/auth/postModemAuthInfo.do}" th:object="${authDataUpdate}" method="post">
+        <input type="hidden" th:field="*{id}" />
+        <div>
+            <label>Data Class:</label>
+            <select th:field="*{dataClass}" id="dataClassSelect">
+                <option th:each="cls : ${templateDataClass}" th:value="${cls[0]}" th:data-template="${cls[1]}" th:text="${cls[0]}"></option>
+            </select>
+        </div>
+        <div>
+            <label>Data:</label>
+            <input type="text" th:field="*{data}" />
+        </div>
+<!--        <div>-->
+<!--            <label>Temp Data:</label>-->
+            <input type="hidden" th:field="*{tempData}" />
+<!--        </div>-->
+        <button type="submit" th:text="*{id == null ? 'Create' : 'Update'}"></button>
+    </form>
+
+    <hr/>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Data Class</th>
+                <th>Data</th>
+                <th>Temp Data</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="authInfo : ${listAuthInfo}">
+                <td>
+                    <a th:href="@{/web/modem/auth/getListAuthInfo.do(page=${currPage}, updateId=${authInfo.id})}" th:text="${authInfo.id}"></a>
+                </td>
+                <td th:text="${authInfo.dataClass}"></td>
+                <td th:text="${authInfo.data}"></td>
+                <td th:text="${authInfo.tempData}"></td>
+                <td style="background: transparent;">
+                    <form th:action="@{/web/modem/auth/deleteModemAuthInfo.do}" method="post" style="display:inline; background: transparent; padding: 0; margin: 0; border: none;">
+                        <input type="hidden" name="id" th:value="${authInfo.id}" />
+                        <button type="submit" onclick="return confirm('Are you sure you want to delete this entry?');" style="background-color: #f44336; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; flex-shrink: 0;">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        <th:block th:each="pageNumber : ${pagination}">
+            <a th:classappend="${pageNumber == currPage} ? 'active' : ''" th:href="@{/web/modem/auth/getListAuthInfo.do(page=${pageNumber})}" th:text="${pageNumber}"></a>
+        </th:block>
+    </div>
+
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const dataClassSelect = document.getElementById('dataClassSelect');
+            const dataInput = document.querySelector('input[name="data"]');
+            
+            dataClassSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const templateJson = selectedOption.getAttribute('data-template');
+                
+                if (templateJson) {
+                    dataInput.value = templateJson;
+                }
+            });
+        });
+    </script>
+    
+    <script src="/js/script.js"></script>
+</body>
+</html>

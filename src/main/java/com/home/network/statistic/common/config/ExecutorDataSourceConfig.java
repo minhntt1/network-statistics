@@ -18,14 +18,15 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import java.util.Properties;
 
 @Configuration
-@Profile({"dev-executor","prd-executor"})
+@Profile({"dev-executor","prd-executor","dev-admin", "prd-admin"})
 @EnableJpaRepositories(
         basePackages = {
             "com.home.network.statistic.poller.aruba.iap.out",
             "com.home.network.statistic.poller.rfc1213.out",
             "com.home.network.statistic.poller.igate.gw240.out",
             "com.home.network.statistic.vendor",
-            "com.home.network.statistic.poller.tplink.deco.out"
+            "com.home.network.statistic.poller.tplink.deco.out",
+            "com.home.network.statistic.poller.authentication"
         },
         entityManagerFactoryRef = "appEm",
         transactionManagerRef = "appJpaTx"
@@ -70,7 +71,8 @@ public class ExecutorDataSourceConfig {
                 "com.home.network.statistic.poller.rfc1213.out",
                 "com.home.network.statistic.vendor",
                 "com.home.network.statistic.poller.igate.gw240.out",
-                "com.home.network.statistic.poller.tplink.deco.out");
+                "com.home.network.statistic.poller.tplink.deco.out",
+                "com.home.network.statistic.poller.authentication");
         return conf;
     }
 }

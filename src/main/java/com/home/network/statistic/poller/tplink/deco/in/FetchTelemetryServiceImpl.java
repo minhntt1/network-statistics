@@ -1,5 +1,7 @@
 package com.home.network.statistic.poller.tplink.deco.in;
 
+import com.home.network.statistic.poller.authentication.AuthData;
+import com.home.network.statistic.poller.authentication.AuthDataRepo;
 import com.home.network.statistic.poller.tplink.deco.out.ClientDeviceInfoRaw;
 import com.home.network.statistic.poller.tplink.deco.out.ClientDeviceInfoRepo;
 import com.home.network.statistic.poller.tplink.deco.out.DeviceInfoRaw;
@@ -9,12 +11,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.channels.ClosedChannelException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -26,19 +30,18 @@ public class FetchTelemetryServiceImpl implements FetchTelemetryService {
     private final HttpClient httpClient;
     private final ClientDeviceInfoRepo clientDeviceInfoRepo;
     private final DeviceInfoRepo deviceInfoRepo;
-    // todo: impl way to securely to credentials
-    private final WebUiCredentials webUiCredentials = WebUiCredentials.createDecoCredentials("Minhtuan10", "tplinkdeco.net");
-    private WebRequestExtra webRequestExtra;
+    private final AuthDataRepo authDataRepo;
 
     public FetchTelemetryServiceImpl(
             @Qualifier("virtualThreadPool") ExecutorService threadPool,
             HttpClient httpClient,
             ClientDeviceInfoRepo clientDeviceInfoRepo,
-            DeviceInfoRepo deviceInfoRepo) {
+            DeviceInfoRepo deviceInfoRepo, AuthDataRepo authDataRepo) {
         this.threadPool = threadPool;
         this.httpClient = httpClient;
         this.clientDeviceInfoRepo = clientDeviceInfoRepo;
         this.deviceInfoRepo = deviceInfoRepo;
+        this.authDataRepo = authDataRepo;
     }
 
     public void handleConnectionException(Exception e) {
@@ -61,37 +64,40 @@ public class FetchTelemetryServiceImpl implements FetchTelemetryService {
     }
 
     @SneakyThrows
-    public WebResponse getClientByDeviceMac(String mac) {
+    public WebResponse getClientByDeviceMac(String mac, WebRequestExtra webRequestExtra) {
         return
             WebResponseEncrypted.from(
-                    httpClient.send(webRequestExtra.getRequestFindClientList(mac), HttpResponse.BodyHandlers.ofString()).body())
+                    httpClient.send(webRequestExtra.extRequestFindClientList(mac), HttpResponse.BodyHandlers.ofString()).body())
                         .toJsonDecryptAES(
                             webRequestExtra.getWebEncryptor());
     }
 
     @SneakyThrows
-    public WebResponse getWlanInfo() {
+    public WebResponse getWlanInfo(WebRequestExtra webRequestExtra) {
         return
                 WebResponseEncrypted.from(
-                        httpClient.send(webRequestExtra.getRequestFindWlan(), HttpResponse.BodyHandlers.ofString()).body())
+                        httpClient.send(webRequestExtra.extRequestFindWlan(), HttpResponse.BodyHandlers.ofString()).body())
                         .toJsonDecryptAES(webRequestExtra.getWebEncryptor());
     }
 
-    public boolean initRequestMetadata() throws Exception {
+    public Future<WebResponse> getFutureWlanInfo(WebRequestExtra webRequestExtra) {
+        return threadPool.submit(() -> getWlanInfo(webRequestExtra));
+    }
+
+    public Future<WebResponse> getFutureClientByDeviceMac(WebRequestExtra webRequestExtra, String mac) {
+        return threadPool.submit(() -> this.getClientByDeviceMac(mac, webRequestExtra));
+    }
+
+    public WebRequestExtra initRequestMetadata(WebUiCredentials webUiCredentials) throws Exception {
         log.info("doing authentication");
 
-        webRequestExtra = new WebRequestExtra();
-
-        // create temp web encryptor
-        WebEncryptor encryptor = new WebEncryptor();
-        encryptor.initCredentials(webUiCredentials);
-        webRequestExtra.setWebEncryptor(encryptor);
+        WebRequestExtra webRequestExtra = new WebRequestExtra(webUiCredentials);
 
         // get rsa keys for pass encryption
         Future<WebResponse> respAuthKeys =
             threadPool.submit(() -> WebResponse.from(
                 httpClient.send(
-                    webRequestExtra.getRequestAuthKeys(),
+                    webRequestExtra.extRequestAuthKeys(),
                     HttpResponse.BodyHandlers.ofString()).body()
             ));
 
@@ -99,44 +105,50 @@ public class FetchTelemetryServiceImpl implements FetchTelemetryService {
         Future<WebResponse> respDataKeys =
             threadPool.submit(() -> WebResponse.from(
                 httpClient.send(
-                        webRequestExtra.getRequestDataKeys(),
+                        webRequestExtra.extRequestDataKeys(),
                         HttpResponse.BodyHandlers.ofString()).body()
                 ));
 
         // if one of credentials contains error, break
-        if (respAuthKeys.get().hasError() ||
-            respDataKeys.get().hasError()) {
-            return false;
+        if (respAuthKeys.get().hasError() || respDataKeys.get().hasError()) {
+            return null;
         }
 
         // init a complete encryptor
-        encryptor.init(respAuthKeys.get(), respDataKeys.get());
+        webRequestExtra.initWebEncryptorKeys(respAuthKeys.get(), respDataKeys.get());
 
         // login to get stok and auth header
         var respLogin =
             httpClient.send(
-                    webRequestExtra.getRequestLogin(),
+                    webRequestExtra.extRequestLogin(),
                     HttpResponse.BodyHandlers.ofString());
-        var loginBody = WebResponseEncrypted.from(respLogin.body()).toJsonDecryptAES(encryptor);
+        var loginBody = WebResponseEncrypted.from(respLogin.body()).toJsonDecryptAES(webRequestExtra);
 
         if (loginBody.hasError()) {
-            return false;
+            return null;
         }
 
         webRequestExtra.setStok(loginBody.getStok());
         webRequestExtra.putCookieHeader(respLogin.headers());
 
-        return true;
+        return webRequestExtra;
     }
 
     @Override
+    @Transactional(value = "appJpaTx")
     public void fetchClientAndWlanInfo() {
-        log.info("start");
+        fetchBulkAndProcess(log, true, WebUiCredentials.class);
+    }
 
-        // fetch login info if there is no param
-        if (webRequestExtra == null) {
+    @Override
+    public void process(AuthData authData) {
+        // fetch login info if there is no param / temp auth data
+        var cred = authData.extractCredentialAbstract(WebUiCredentials.class);
+        WebRequestExtra webRequestExtra;
+
+        if (!authData.checkTempData(WebRequestExtra.class)) {
             try {
-                if (!initRequestMetadata()) {
+                if ((webRequestExtra = initRequestMetadata(cred)) == null) {
                     log.info("error while init security credentials");
                     return;
                 }
@@ -144,24 +156,28 @@ public class FetchTelemetryServiceImpl implements FetchTelemetryService {
                 handleConnectionException(e);
                 return;
             }
+
+            // update to db because temp data is changed
+            webRequestExtra.updateAuthEntity(authData);
+        } else {
+            webRequestExtra = WebRequestExtra.fromJson(authData.getTempData());
         }
 
         // get device list
         WebResponseExtra deviceList;
 
         try {
-            deviceList = new WebResponseExtra(httpClient.send(webRequestExtra.getRequestFindDevices(), HttpResponse.BodyHandlers.ofString()));
+            deviceList = new WebResponseExtra(httpClient.send(webRequestExtra.extRequestFindDevices(), HttpResponse.BodyHandlers.ofString()));
         } catch (Exception e) {
             handleConnectionException(e);
             return;
         }
 
         // at this step, if there are token and k,v, but still have error in request
-        // have to reauth again
-        // handle case when body string is empty
-        if (deviceList.hasErrorStringStatus()) {
+        // have to reauth again, and update it to db
+        if (deviceList.hasErrorBody()) {
             try {
-                if (!initRequestMetadata()) {
+                if ((webRequestExtra = initRequestMetadata(cred)) == null) {
                     log.info("failure during reauth");
                     return;
                 }
@@ -169,19 +185,24 @@ public class FetchTelemetryServiceImpl implements FetchTelemetryService {
                 handleConnectionException(e);
                 return;
             }
+
+            // update to db because temp data is changed
+            webRequestExtra.updateAuthEntity(authData);
+            return;
         }
 
-        var bodyDeviceList = WebResponseEncrypted.from(deviceList.getStringBody()).toJsonDecryptAES(webRequestExtra.getWebEncryptor());
+        var bodyDeviceList = deviceList.toWebResponseEncrypted().toJsonDecryptAES(webRequestExtra);
         var deviceMac = bodyDeviceList.getDeviceMacs();
 
         // because web request is slow, have to request in parallel
         // map device mac with respective client list
         var pollTime = LocalDateTime.now();
         var mapDeviceToClient = new HashMap<String, Future<WebResponse>>();
-        var futureWlanInfo = threadPool.submit(this::getWlanInfo);
+        var futureWlanInfo = this.getFutureWlanInfo(webRequestExtra);
 
-        for (var mac : deviceMac)
-            mapDeviceToClient.put(mac, threadPool.submit(() -> this.getClientByDeviceMac(mac)));
+        for (var mac : deviceMac) {
+            mapDeviceToClient.put(mac, this.getFutureClientByDeviceMac(webRequestExtra, mac));
+        }
 
         // after request done, map it to output object to process later in db
         var deviceInfoRaws = bodyDeviceList.extractDeviceInfoRaws(pollTime);
@@ -189,9 +210,7 @@ public class FetchTelemetryServiceImpl implements FetchTelemetryService {
 
         try {
             var wlanInfoRaw = futureWlanInfo.get().extractWlanInfoRaws();
-            clientDeviceInfoRaw = new ClientDeviceInfoRaw();
-            clientDeviceInfoRaw.setPollTime(pollTime);
-            clientDeviceInfoRaw.setWlanInfoRaw(wlanInfoRaw);
+            clientDeviceInfoRaw = new ClientDeviceInfoRaw(pollTime, wlanInfoRaw);
 
             for (var mac : deviceMac) {
                 var clientList = mapDeviceToClient.get(mac).get().extractClientInfoRaws();
@@ -209,7 +228,10 @@ public class FetchTelemetryServiceImpl implements FetchTelemetryService {
         // save to db
         deviceInfoRepo.save(deviceInfoEntity);
         clientDeviceInfoRepo.save(clientDeviceInfoEntity);
+    }
 
-        log.info("end");
+    @Override
+    public AuthDataRepo extractAuthDataRepo() {
+        return authDataRepo;
     }
 }

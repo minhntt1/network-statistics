@@ -4,7 +4,10 @@ import com.home.network.statistic.common.util.AESUtil;
 import com.home.network.statistic.common.util.EncryptionUtil;
 import com.home.network.statistic.common.util.RSAUtil;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
+@Getter
 public class WebEncryptor {
     private String aesKey;
     private String iv;
@@ -17,7 +20,6 @@ public class WebEncryptor {
     private String rsaModulusAuth;
     private String rsaExponentAuth;
 
-    @Getter
     private WebUiCredentials webUiCredentials;
 
     public void init(WebResponse authResponse, WebResponse dataResponse) {
@@ -52,10 +54,10 @@ public class WebEncryptor {
     }
 
     public void initMD5Hash() {
-        this.hash = EncryptionUtil.md5(webUiCredentials.getConcatUserPass());
+        this.hash = EncryptionUtil.md5(webUiCredentials.extractConcatUserPass());
     }
 
-    public String getEncryptPassForAuth() {
+    public String extEncryptPassForAuth() {
         return RSAUtil.encrypt(webUiCredentials.getPassword(), rsaModulusAuth, rsaExponentAuth);
     }
 

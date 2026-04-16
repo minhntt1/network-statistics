@@ -1,6 +1,6 @@
 package com.home.network.statistic.poller.aruba.iap.in.job;
 
-import com.home.network.statistic.poller.aruba.iap.in.service.ArubaSnmpAiPollingService;
+import com.home.network.statistic.poller.aruba.iap.in.service.ArubaSnmpAiPollApInfoService;
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -8,10 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 @DisallowConcurrentExecution
 public class ArubaSnmpAiPollApInfoJob implements Job {
     @Autowired(required = false)
-    private ArubaSnmpAiPollingService arubaSnmpAiPollingService;
+    private ArubaSnmpAiPollApInfoService service;
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        arubaSnmpAiPollingService.pollApInfo();
+        service.pollApInfo();
     }
 }

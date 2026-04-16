@@ -8,19 +8,27 @@ import lombok.AllArgsConstructor;
 public class WebResponseExtra {
 	private HttpResponse response;
 	
-	public boolean hasErrorStatus() {
+	public boolean checkErrorStatus() {
 		return response.statusCode() != 200;
 	}
 	
-	public boolean hasErrorStringBody() {
-		return ((String)response.body()).isBlank();
+	public boolean checkErrorStringBody() {
+		return response.body() == null || ((String)response.body()).isBlank();
 	}
 	
-	public boolean hasErrorStringStatus() {
-		return hasErrorStatus() || hasErrorStringBody();
+	public boolean checkErrorStringStatus() {
+		return checkErrorStatus() || checkErrorStringBody();
 	}
-	
+
 	public String getStringBody() {
 		return (String)response.body();
+	}
+
+	public WebResponseEncrypted toWebResponseEncrypted() {
+		return WebResponseEncrypted.from(getStringBody());
+	}
+
+	public boolean hasErrorBody() {
+		return checkErrorStringStatus() || toWebResponseEncrypted().checkInvalidData();
 	}
 }

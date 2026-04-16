@@ -1,6 +1,9 @@
 package com.home.network.statistic.poller.tplink.deco.in;
 
+import com.home.network.statistic.common.util.JsonUtil;
+import com.home.network.statistic.poller.authentication.AuthData;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.net.URI;
@@ -9,6 +12,8 @@ import java.net.http.HttpRequest;
 import java.util.ArrayList;
 import java.util.List;
 
+@NoArgsConstructor
+@Getter
 public class WebRequestExtra {
     public static final String PATH_LOGIN = "/cgi-bin/luci/;stok=/login?form=login";
     public static final String PATH_FIND_AUTH_KEYS = "/cgi-bin/luci/;stok=/login?form=keys";
@@ -19,12 +24,14 @@ public class WebRequestExtra {
 
     private final List<String> headers = new ArrayList<>();
     @Setter
-    @Getter
     private WebEncryptor webEncryptor;
     @Setter
     private String stok;
 
-    public WebRequestExtra() {
+    public WebRequestExtra(WebUiCredentials webUiCredentials) {
+        // create a temp web encryptor
+        webEncryptor = new WebEncryptor();
+        webEncryptor.initCredentials(webUiCredentials);
         // very important header
         headers.add("Content-Type");
         headers.add("application/json");
@@ -35,6 +42,10 @@ public class WebRequestExtra {
         headers.add(httpLoginHeaders.firstValue("Set-Cookie").get().split(";")[0]);
     }
 
+    public void initWebEncryptorKeys(WebResponse authResponse, WebResponse dataResponse) {
+        webEncryptor.init(authResponse, dataResponse);
+    }
+
     public HttpRequest.BodyPublisher toRequestBody(WebRequest requestBody, boolean enc, boolean login) {
         return HttpRequest.BodyPublishers.ofString(
                 enc ?
@@ -43,7 +54,7 @@ public class WebRequestExtra {
         );
     }
 
-    public HttpRequest getRequestFindDevices() {
+    public HttpRequest extRequestFindDevices() {
         return HttpRequest.newBuilder()
                 .POST(
                         toRequestBody(WebRequest.createReadRequest(), true, false)
@@ -53,7 +64,7 @@ public class WebRequestExtra {
                 .build();
     }
 
-    public HttpRequest getRequestFindClientList(String deviceMac) {
+    public HttpRequest extRequestFindClientList(String deviceMac) {
         return HttpRequest.newBuilder()
                 .POST(
                         toRequestBody(WebRequest.createReadClientByDeviceRequest(deviceMac), true, false)
@@ -63,7 +74,7 @@ public class WebRequestExtra {
                 .build();
     }
 
-    public HttpRequest getRequestFindWlan() {
+    public HttpRequest extRequestFindWlan() {
         return HttpRequest.newBuilder()
                 .POST(
                         toRequestBody(WebRequest.createReadRequest(), true, false)
@@ -73,7 +84,7 @@ public class WebRequestExtra {
                 .build();
     }
 
-    public HttpRequest getRequestDataKeys() {
+    public HttpRequest extRequestDataKeys() {
         return HttpRequest.newBuilder()
                 .POST(
                         toRequestBody(WebRequest.createReadRequest(), false, false)
@@ -83,7 +94,7 @@ public class WebRequestExtra {
                 .build();
     }
 
-    public HttpRequest getRequestAuthKeys() {
+    public HttpRequest extRequestAuthKeys() {
         return HttpRequest.newBuilder()
                 .POST(
                         toRequestBody(WebRequest.createReadRequest(), false, false)
@@ -93,7 +104,7 @@ public class WebRequestExtra {
                 .build();
     }
 
-    public HttpRequest getRequestLogin() {
+    public HttpRequest extRequestLogin() {
         return HttpRequest.newBuilder()
                 .POST(
                         toRequestBody(WebRequest.createRequestLogin(webEncryptor), true, true)
@@ -101,5 +112,17 @@ public class WebRequestExtra {
                 .headers(headers.toArray(String[]::new))
                 .uri(URI.create("http://" + webEncryptor.getWebUiCredentials().getHost() + PATH_LOGIN))
                 .build();
+    }
+
+    public String toJson() {
+        return JsonUtil.toJson(this);
+    }
+
+    public void updateAuthEntity(AuthData data) {
+        data.updateTempData(toJson());
+    }
+
+    public static WebRequestExtra fromJson(String json) {
+        return JsonUtil.fromJson(json, WebRequestExtra.class);
     }
 }

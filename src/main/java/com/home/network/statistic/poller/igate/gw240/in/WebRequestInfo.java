@@ -1,5 +1,7 @@
 package com.home.network.statistic.poller.igate.gw240.in;
 
+import com.home.network.statistic.common.util.JsonUtil;
+import com.home.network.statistic.poller.authentication.AuthData;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpHeaders;
@@ -57,5 +59,17 @@ public class WebRequestInfo {
         for (var header : headers.entrySet()) {
             httpHeaders.add(header.getKey(), header.getValue());
         }
+    }
+
+    public static WebRequestInfo fromJson(String s) {
+        return JsonUtil.fromJson(s, WebRequestInfo.class);
+    }
+
+    public String toJson() {
+        return JsonUtil.toJson(this);
+    }
+
+    public void updateTempAuthData(AuthData data) {
+        data.updateTempData(toJson());
     }
 }
