@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.http.HttpClient;
+import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpResponse;
 import java.nio.channels.ClosedChannelException;
 import java.time.LocalDateTime;
@@ -46,9 +47,9 @@ public class FetchTelemetryServiceImpl implements FetchTelemetryService {
 
     public void handleConnectionException(Exception e) {
         log.error("error", e);
-        // when connection to router closed
+        // when connection to router timeout
         // -> consider it down and put empty record into db to detect connect/disconnect status later
-        if (e instanceof ClosedChannelException) {
+        if (e instanceof HttpConnectTimeoutException) {
             log.error("ap connection error");
             insertEmptyRecordsToDb();
         }

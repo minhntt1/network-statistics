@@ -36,6 +36,7 @@ public class RestClientConfig {
 
         return HttpClient.newBuilder()
                 .sslContext(ctx)
+                .connectTimeout(Duration.ofSeconds(5))
                 .build();
     }
 
