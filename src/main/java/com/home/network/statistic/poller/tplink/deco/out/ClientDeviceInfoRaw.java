@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.home.network.statistic.common.util.JsonUtil;
+import com.home.network.statistic.common.util.NetworkUtil;
 import com.home.network.statistic.poller.tplink.deco.out.etl.*;
 import lombok.*;
 
@@ -67,11 +68,7 @@ public class ClientDeviceInfoRaw {
     }
 
     public static Long extractDeviceMac(String device) {
-        var tmpMac = device;
-        tmpMac = tmpMac.replace("-", "");
-        tmpMac = tmpMac.replace(":", "");
-        tmpMac = tmpMac.isBlank() ? "0" : tmpMac;
-        return Long.parseLong(tmpMac, 16);
+        return NetworkUtil.convertMacStringToLong(device);
     }
 
     public ClientDeviceInfoEntity toClientDeviceInfoEntity() {
@@ -107,7 +104,12 @@ public class ClientDeviceInfoRaw {
 
         for (var macClient : mapDeviceToClient.entrySet()) {
             var deviceMac = macClient.getKey();
-            for (var client : macClient.getValue()) {
+            
+            // ignore corrupted records
+            if (deviceMac == null || deviceMac.isBlank())
+            	continue;
+            
+            for (var client : macClient.getValue()) if (client.checkMacIp()) {
                 for (var wlan : wlanInfoRaw)
                     if (wlan.hasAttachedToClient(client)) {
                         var clientNorm = client.toClientNormalized();
@@ -142,6 +144,11 @@ public class ClientDeviceInfoRaw {
 
         for (var macClient : mapDeviceToClient.entrySet()) {
             var deviceMac = macClient.getKey();
+            
+            // ignore corrupted records
+            if (deviceMac == null || deviceMac.isBlank())
+            	continue;
+            
             for (var client : macClient.getValue()) {
                 for (var wlan : wlanInfoRaw)
                     if (wlan.hasAttachedToClient(client)) {

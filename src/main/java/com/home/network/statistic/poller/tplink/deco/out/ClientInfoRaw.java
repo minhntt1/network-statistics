@@ -80,6 +80,12 @@ public class ClientInfoRaw {
     public Long extractNormMac() {
         return NetworkUtil.convertMacStringToLong(mac);
     }
+    
+    // check a valid client, if don't have, ignore
+    public boolean checkMacIp() {
+    	return ip != null && !ip.isBlank() &&
+    			mac != null && !mac.isBlank();
+    }
 
     public ClientNormalized toClientNormalized() {
         return ClientNormalized.builder()
