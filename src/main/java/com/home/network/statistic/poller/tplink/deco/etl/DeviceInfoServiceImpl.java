@@ -131,11 +131,14 @@ public class DeviceInfoServiceImpl implements DeviceInfoService {
                 for (var rebootCntEntry : devToMapEmptyRebootCnt.entrySet()) {
                     var rebootCntKey = rebootCntEntry.getKey();
                     var rebootCnt = rebootCntEntry.getValue();
-
+                    
+                    // add reboot cnt record with value 0 to map
+                    mapRebootCnt.putIfAbsent(rebootCnt, rebootCnt);
+                    
                     if (!mapState.containsKey(rebootCntKey)) {
-                        // create a reboot event with increased count, because it has no online status (state key) in state db
-                        // reboot ~ no data in state db (offline) to the appearance of data in stream (online)
-                        mapRebootCnt.computeIfAbsent(rebootCnt, k -> rebootCnt).increaseRebootCnt();
+                        // reboot ~ no data in state db (offline) + the appearance of data in stream (online)
+                        // get from map and increase rebootcnt
+                    	mapRebootCnt.get(rebootCnt).increaseRebootCnt();
                         // null value because a key is enough to indicate the online status of router
                         mapState.put(rebootCntKey, "");
                     }
