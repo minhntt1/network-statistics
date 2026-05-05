@@ -129,6 +129,7 @@ public class ClientDeviceInfoRaw {
             }
         }
 
+        // return a map with client state string and its connect event
         return list;
     }
 

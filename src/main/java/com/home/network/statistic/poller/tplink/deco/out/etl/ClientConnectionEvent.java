@@ -20,6 +20,12 @@ public class ClientConnectionEvent {
     private InterfaceNormalized clientIface;
     private Integer connectStatus;
 
+    public boolean checkDiffEvent(ClientConnectionEvent other) {
+        // consider client is the same
+        // check if ip or ap connect is different
+        return !clientIp.equals(other.clientIp) || !clientIface.equals(other.clientIface);
+    }
+
     public void disconnect(LocalDateTime disconnectTime) {
         this.dateConnect = disconnectTime.toLocalDate().format(DateTimeFormatter.ISO_LOCAL_DATE);
         this.timeConnect = disconnectTime.toLocalTime().toSecondOfDay();
@@ -61,13 +67,10 @@ public class ClientConnectionEvent {
     }
 
     public String extractStateForBatchJob() {
-        return "%s_%s.%d.%d.%s.%d".formatted(
+        return "%s_%s.%d".formatted(
                 extStateKeyConnectPrefix(),
                 client.getClientName(),
-                client.getClientMac(),
-                clientIp.getIpv4(),
-                clientIface.getWlanName(),
-                clientIface.getRouterMac()
+                client.getClientMac()
         );
     }
 
