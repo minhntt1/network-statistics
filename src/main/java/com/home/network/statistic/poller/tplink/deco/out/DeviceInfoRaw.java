@@ -7,11 +7,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.home.network.statistic.common.util.JsonUtil;
 import com.home.network.statistic.common.util.NetworkUtil;
 import com.home.network.statistic.poller.tplink.deco.out.etl.ApInfo;
-import com.home.network.statistic.poller.tplink.deco.out.etl.ApRebootCnt;
+import com.home.network.statistic.poller.tplink.deco.out.etl.ApConnLostCnt;
 import com.home.network.statistic.poller.tplink.deco.out.etl.IpNormalized;
 import lombok.*;
 
-import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
@@ -36,21 +35,28 @@ public class DeviceInfoRaw {
     @JsonProperty("d")
     private String deviceMac;
     @JsonProperty("e")
-    private String inetStatus;  // not sure
+    private String inetStatus;  // internet conn status?
     @JsonProperty("f")
-    private String groupStatus; // not sure
+    private String groupStatus; // mesh group status ?
 
-    public String extractWeekFromEvent() {
-        return pollTime.toLocalDate().with(DayOfWeek.MONDAY)
-                .format(DateTimeFormatter.ISO_LOCAL_DATE);
+    public static DeviceInfoRaw from(String jsonString) {
+        return JsonUtil.fromJson(jsonString, DeviceInfoRaw.class);
     }
 
-    public ApRebootCnt toApRebootCnt() {
-        return ApRebootCnt.builder()
+    public String toJson() {
+        return JsonUtil.toJson(this);
+    }
+
+    public String extractDateFromEvent() {
+        return pollTime.toLocalDate().format(DateTimeFormatter.ISO_LOCAL_DATE);
+    }
+
+    public ApConnLostCnt toApConnLostCnt() {
+        return ApConnLostCnt.builder()
                 .apInfo(toApInfo())
                 .ipNormalized(toIpNormalized())
-                .rebootCnt(0)
-                .startWeek(extractWeekFromEvent())
+                .lostCnt(0)
+                .startWeek(extractDateFromEvent())
                 .build();
     }
 
@@ -66,6 +72,21 @@ public class DeviceInfoRaw {
 
     public int extractIp() {
         return NetworkUtil.convertIpv4StringToInt(deviceIp);
+    }
+
+    public boolean checkToOfflineInetStat(DeviceInfoRaw prev) {
+        return !"online".equals(inetStatus) &&
+                "online".equals(prev.inetStatus);
+    }
+
+    public boolean checkToDisconnectGroupStat(DeviceInfoRaw prev) {
+        return !"connected".equals(groupStatus) &&
+                "connected".equals(prev.groupStatus);
+    }
+
+    public boolean checkConnLost(DeviceInfoRaw prev) {
+        return checkToDisconnectGroupStat(prev) ||
+                checkToOfflineInetStat(prev);
     }
 
     public ApInfo toApInfo() {

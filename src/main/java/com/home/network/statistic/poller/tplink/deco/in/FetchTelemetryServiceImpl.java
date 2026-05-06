@@ -6,6 +6,7 @@ import com.home.network.statistic.poller.tplink.deco.out.ClientDeviceInfoRaw;
 import com.home.network.statistic.poller.tplink.deco.out.ClientDeviceInfoRepo;
 import com.home.network.statistic.poller.tplink.deco.out.DeviceInfoRaw;
 import com.home.network.statistic.poller.tplink.deco.out.DeviceInfoRepo;
+import io.micrometer.core.annotation.Timed;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -137,6 +138,7 @@ public class FetchTelemetryServiceImpl implements FetchTelemetryService {
 
     @Override
     @Transactional(value = "appJpaTx")
+    @Timed(value = "tplink.deco.in.fetch_telemetry")
     public void fetchClientAndWlanInfo() {
         fetchBulkAndProcess(log, true, WebUiCredentials.class);
     }

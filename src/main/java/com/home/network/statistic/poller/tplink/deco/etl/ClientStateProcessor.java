@@ -84,12 +84,19 @@ public class ClientStateProcessor {
         for (var it = historyStates.entrySet().iterator(); it.hasNext(); ) {
             var state = it.next();
             var key = state.getKey();
+
+            // ignore those not client state key
+            if (!ClientConnectionEvent.checkIsStateKeyConnect(key)) {
+                continue;
+            }
+
             var val = ClientConnectionEvent.from(state.getValue().toString());
 
             // if batch has data and state key in inactive set, add disconnect event
             if (hasStreamRawData && inactiveClients.contains(key)) {
                 val.disconnect(currentDt);
                 events.add(val);
+                it.remove();
             }
 
             // in case there is no data at all in current batch
@@ -97,7 +104,7 @@ public class ClientStateProcessor {
             // but it can be case when poller code has issue and no data in db
             // because there is no data at all -> remove all client connection state
             // and don't add disconnect event
-            if (ClientConnectionEvent.checkIsStateKeyConnect(key)) {
+            if (!hasStreamRawData) {
                 it.remove();
             }
         }

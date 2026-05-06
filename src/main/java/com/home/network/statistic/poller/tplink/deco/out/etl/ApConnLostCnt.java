@@ -11,26 +11,26 @@ import java.util.Objects;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApRebootCnt {
+public class ApConnLostCnt {
     private String startWeek;
     private ApInfo apInfo;
     private IpNormalized ipNormalized;
-    private Integer rebootCnt;
+    private Integer lostCnt;
 
     public Object[] toInsertableRow() {
-        return new Object[] {startWeek, apInfo.getApMac(), apInfo.getApName(), ipNormalized.getIpv4(), rebootCnt};
+        return new Object[] {startWeek, apInfo.getApMac(), apInfo.getApName(), ipNormalized.getIpv4(), lostCnt};
     }
 
-    public static List<Object[]> toListInsertable(Collection<ApRebootCnt> rebootCnts) {
+    public static List<Object[]> toListInsertable(Collection<ApConnLostCnt> rebootCnts) {
         return rebootCnts.stream()
-                .map(ApRebootCnt::toInsertableRow)
+                .map(ApConnLostCnt::toInsertableRow)
                 .toList();
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        ApRebootCnt that = (ApRebootCnt) o;
+        ApConnLostCnt that = (ApConnLostCnt) o;
         return Objects.equals(startWeek, that.startWeek) && Objects.equals(apInfo, that.apInfo) && Objects.equals(ipNormalized, that.ipNormalized);
     }
 
@@ -39,20 +39,20 @@ public class ApRebootCnt {
         return Objects.hash(startWeek, apInfo, ipNormalized);
     }
 
-    public void increaseRebootCnt() {
-        this.rebootCnt++;
+    public void increaseLostCnt() {
+        this.lostCnt++;
     }
 
-    public static String prefixKeyDisconnectState() {
-        return "apEvent";
+    public static String prefixKeyConnLostState() {
+        return "apConnLostEvent";
     }
 
     public static boolean hasPrefixKeyRebootState(String key) {
-        return key.startsWith(prefixKeyDisconnectState());
+        return key.startsWith(prefixKeyConnLostState());
     }
 
-    public String extractKeyRebootState() {
+    public String extractKeyConnLostState() {
         // ap reboot cnt should not contain ip in state, because if ip change, it can count wrong, although ap doest not reboot
-        return "%s_%d.%s".formatted(prefixKeyDisconnectState(), apInfo.getApMac(), apInfo.getApName());
+        return "%s_%d.%s".formatted(prefixKeyConnLostState(), apInfo.getApMac(), apInfo.getApName());
     }
 }
