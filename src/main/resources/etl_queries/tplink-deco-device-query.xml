@@ -112,53 +112,52 @@
     </entry>
 
     <!--  temp table for ap reboot cnt  -->
-    <entry key="createTempForApRebootCnt">
-        create temporary table tmp_ap_reboot_cnt_per_week_fact (
-            `ap_week` date,
+    <!--  following code snippet will be replaced for daily conn lost  -->
+    <entry key="createTempForApConnLost">
+        create temporary table tmp_ap_connection_lost_daily_fact (
+            `ap_date` date,
             `ap_mac` bigint,
             `ap_name` varchar(255),
             `ap_ip` int,
-            `reboot_cnt` int
+            `cnt_lost` int
         )
     </entry>
-    <entry key="insertTmpFactToApRebootCnt">
-        insert into tmp_ap_reboot_cnt_per_week_fact
+    <entry key="insertTmpFactToApConnLost">
+        insert into tmp_ap_connection_lost_daily_fact
         values (?,?,?,?,?)
     </entry>
-    <entry key="dropTempForApRebootCnt">
-        drop table tmp_ap_reboot_cnt_per_week_fact
+    <entry key="dropTempForApConnLost">
+        drop table tmp_ap_connection_lost_daily_fact
     </entry>
-    <entry key="updateApRebootCnt">
-        <![CDATA[
-            insert into ap_reboot_cnt_per_week_fact(date_key, ap_key, ip_key, count_reboot) (
-                select
-                dd.date_key,
-                ad.ap_key,
-                id.ip_key,
-                app_exec_tbl.reboot_cnt -- count reboot (already calculated) in app code, value >= 0
+    <entry key="updateApConnLost">
+        insert into ap_connection_lost_daily_fact(date_key, ap_key, ip_key, lost_cnt) (
+            select
+            dd.date_key,
+            ad.ap_key,
+            id.ip_key,
+            app_exec_tbl.cnt_lost -- remember to use different column name from target column name when upserting
 
-                from tmp_ap_reboot_cnt_per_week_fact app_exec_tbl
+            from tmp_ap_connection_lost_daily_fact app_exec_tbl
 
-                join date_dim dd on dd.date_key=(
-                    select date_key from
-                    date_dim
-                    where app_exec_tbl.ap_week=date
-                )
-
-                join ap_dim ad on ad.ap_key=(
-                    select ap_key from
-                    ap_dim
-                    where app_exec_tbl.ap_mac=ap_mac and app_exec_tbl.ap_name=ap_name
-                )
-
-                join ip_dim id on id.ip_key=(
-                    select ip_key from
-                    ip_dim
-                    where app_exec_tbl.ap_ip=ipv4
-                )
+            join date_dim dd on dd.date_key=(
+                select date_key from
+                date_dim
+                where app_exec_tbl.ap_date=date
             )
-            on duplicate key update count_reboot=count_reboot+values(count_reboot)
-        ]]>
+
+            join ap_dim ad on ad.ap_key=(
+                select ap_key from
+                ap_dim
+                where app_exec_tbl.ap_mac=ap_mac and app_exec_tbl.ap_name=ap_name
+            )
+
+            join ip_dim id on id.ip_key=(
+                select ip_key from
+                ip_dim
+                where app_exec_tbl.ap_ip=ipv4
+            )
+        )
+        on duplicate key update lost_cnt=lost_cnt+values(lost_cnt)
     </entry>
 
     <!-- following clean up queries should be outside main transaction -->

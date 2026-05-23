@@ -3,7 +3,7 @@ package com.home.network.statistic.poller.tplink.deco.etl;
 import com.home.network.statistic.common.model.ListSqlQuery;
 import com.home.network.statistic.poller.tplink.deco.out.DeviceInfoEntity;
 import com.home.network.statistic.poller.tplink.deco.out.DeviceInfoRaw;
-import com.home.network.statistic.poller.tplink.deco.out.etl.ApRebootCnt;
+import com.home.network.statistic.poller.tplink.deco.out.etl.ApConnLostCnt;
 import io.micrometer.core.annotation.Timed;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
@@ -102,69 +102,27 @@ public class DeviceInfoServiceImpl implements DeviceInfoService {
     public void summarizeData(JobExecutionContext jec) {
         log.info("start summarizing");
 
-        // map to store temp reboot count for each ap to insert into db
-        var mapRebootCnt = new HashMap<ApRebootCnt, ApRebootCnt>();
+        // history state
         var mapState = jec.getJobDetail().getJobDataMap();
+        var processor = new ApConnLostStateProcessor(mapState);
 
-        boolean noData = true;
-
-        try (var stream = jdbcTemplate
-                .queryForStream(listSqlQuery.getQueryValue("getAllStaging"), new BeanPropertyRowMapper<>(DeviceInfoEntity.class))) {
-            for (var it = stream.iterator(); it.hasNext(); ) {
-                noData = false;
-
-                var dev = it.next();
-                var devToMapEmptyRebootCnt = dev.toApRebootCnts();
-
-                // loop thru statedb
-                for (var stateIt = mapState.entrySet().iterator(); stateIt.hasNext(); ) {
-                    var state = stateIt.next();
-                    var stateKey = state.getKey();
-
-                    // if something in current state map not appear in stream, remove from state map
-                    if (!devToMapEmptyRebootCnt.containsKey(stateKey)) {
-                        stateIt.remove();
-                    }
-                }
-
-                // loop thru list of current stream
-                for (var rebootCntEntry : devToMapEmptyRebootCnt.entrySet()) {
-                    var rebootCntKey = rebootCntEntry.getKey();
-                    var rebootCnt = rebootCntEntry.getValue();
-                    
-                    // add reboot cnt record with value 0 to map
-                    mapRebootCnt.putIfAbsent(rebootCnt, rebootCnt);
-                    
-                    if (!mapState.containsKey(rebootCntKey)) {
-                        // reboot ~ no data in state db (offline) + the appearance of data in stream (online)
-                        // get from map and increase rebootcnt
-                    	mapRebootCnt.get(rebootCnt).increaseRebootCnt();
-                        // null value because a key is enough to indicate the online status of router
-                        mapState.put(rebootCntKey, "");
-                    }
-                }
-            }
+        try (var stream = jdbcTemplate.queryForStream(listSqlQuery.getQueryValue("getAllStaging"), new BeanPropertyRowMapper<>(DeviceInfoEntity.class))) {
+            processor.calcApConnLostCnt(stream);
         }
 
         // incase there is no data at all, remove
-        if (noData) {
-            for (var it = mapState.entrySet().iterator(); it.hasNext(); ) {
-                var key = it.next().getKey();
-                if (ApRebootCnt.hasPrefixKeyRebootState(key))
-                    it.remove();
-            }
-        }
+        processor.cleanOldHistStatesNoData();
 
-        var insertableRows = ApRebootCnt.toListInsertable(mapRebootCnt.values());
+        var insertableRows = ApConnLostCnt.toListInsertable(processor.toApConnLostCnts());
 
         if (!insertableRows.isEmpty()) {
-            jdbcTemplate.execute(listSqlQuery.getQueryValue("createTempForApRebootCnt"));
+            jdbcTemplate.execute(listSqlQuery.getQueryValue("createTempForApConnLost"));
 
-            jdbcTemplate.batchUpdate(listSqlQuery.getQueryValue("insertTmpFactToApRebootCnt"), insertableRows);
+            jdbcTemplate.batchUpdate(listSqlQuery.getQueryValue("insertTmpFactToApConnLost"), insertableRows);
 
-            jdbcTemplate.execute(listSqlQuery.getQueryValue("updateApRebootCnt"));
+            jdbcTemplate.execute(listSqlQuery.getQueryValue("updateApConnLost"));
 
-            jdbcTemplate.execute(listSqlQuery.getQueryValue("dropTempForApRebootCnt"));
+            jdbcTemplate.execute(listSqlQuery.getQueryValue("dropTempForApConnLost"));
         }
 
         log.info("end summarizing");

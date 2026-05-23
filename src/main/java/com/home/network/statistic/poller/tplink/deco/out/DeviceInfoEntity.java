@@ -6,7 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.home.network.statistic.common.util.JsonUtil;
 import com.home.network.statistic.poller.tplink.deco.out.etl.ApInfo;
-import com.home.network.statistic.poller.tplink.deco.out.etl.ApRebootCnt;
+import com.home.network.statistic.poller.tplink.deco.out.etl.ApConnLostCnt;
 import com.home.network.statistic.poller.tplink.deco.out.etl.IpNormalized;
 import jakarta.persistence.*;
 import lombok.*;
@@ -34,11 +34,17 @@ public class DeviceInfoEntity {
     private LocalDateTime pollTime;
     private String rawData;
 
-    public Map<String, ApRebootCnt> toApRebootCnts() {
+    public Map<String, DeviceInfoRaw> toMapStkToState() {
         return extractDeviceInfoRaw()
                 .stream()
-                .map(DeviceInfoRaw::toApRebootCnt)
-                .collect(Collectors.toMap(ApRebootCnt::extractKeyRebootState, Function.identity()));
+                .collect(Collectors.toMap(raw -> raw.toApConnLostCnt().extractKeyConnLostState(), Function.identity()));
+    }
+
+    public Map<String, ApConnLostCnt> toApConnLost() {
+        return extractDeviceInfoRaw()
+                .stream()
+                .map(DeviceInfoRaw::toApConnLostCnt)
+                .collect(Collectors.toMap(ApConnLostCnt::extractKeyConnLostState, Function.identity()));
     }
 
     public List<Object[]> toInsertableIps() {

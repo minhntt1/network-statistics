@@ -1,11 +1,10 @@
 package com.home.network.statistic.poller.tplink.deco.in;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
-
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class WebResponseEncryptedTest {
@@ -15,7 +14,7 @@ public class WebResponseEncryptedTest {
 			WebResponseEncrypted.from(null);
 		} catch (Exception e) {
 			// TODO: handle exception
-			log.error("", e);
+			log.info("", e);
 		}
 
 	}

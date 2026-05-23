@@ -15,8 +15,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -150,64 +150,17 @@ public class ClientDeviceInfoServiceImpl implements ClientDeviceInfoService {
         // list of connect/disconnect events
         var events = new ArrayList<ClientConnectionEvent>();
 
-        boolean hasData = false;
+        // define list containing clients with no activity
+        var inactive = new HashSet<>(stateMap.keySet());
+
+        // define obj to hold client states
+        var clientStates = new ClientStateProcessor(stateMap, inactive);
 
         try (var stream = jdbcTemplate.queryForStream(listSqlQuery.getQueryValue("getAllStaging"), new BeanPropertyRowMapper<>(ClientDeviceInfoEntity.class))) {
-            for (var it = stream.iterator(); it.hasNext(); ) {
-                hasData = true;
-
-                // process ingest
-                var currentRaw = it.next();
-
-                // current poll time of record in current batch
-                LocalDateTime pollTime = currentRaw.getPollTime();
-
-                // convert raw to object
-                var rawObj = currentRaw.toClientDeviceInfoRaw();
-
-                // extract list connect event mapped by keys for batch job
-                var currConnectEvents = rawObj.toClientConnectionEvents();
-
-                // loop thru state map in db
-                for (var stateIt = stateMap.entrySet().iterator(); stateIt.hasNext(); ) {
-                    var state = stateIt.next();
-                    var stateVal = ClientConnectionEvent.from(state.getValue().toString());
-
-                    // if previous entry in map does not appear in current set
-                    // create a disconnect event from one in map
-                    // remove current from map
-                    if (!currConnectEvents.containsKey(state.getKey())) {
-                        stateVal.disconnect(pollTime);
-                        // create disconnect event
-                        events.add(stateVal);
-                        stateIt.remove();
-                    }
-                }
-
-                // loop thru current map from ap
-                for (var connectEvent : currConnectEvents.entrySet()) {
-                    var stateKey = connectEvent.getKey();
-
-                    // if db map does not contain current event
-                    if (!stateMap.containsKey(stateKey)) {
-                        // add connect event
-                        events.add(connectEvent.getValue());
-                        // add state to map
-                        stateMap.put(stateKey, connectEvent.getValue().toJson());
-                    }
-                }
-            }
+            events.addAll(clientStates.calcClientConnectionEvents(stream));
         }
 
-        // in this case, all clients disconnected or aps are down
-        // because there is no data at all -> remove all client connection state
-        if (!hasData) {
-            for (var it = stateMap.entrySet().iterator(); it.hasNext(); ) {
-                var key = it.next().getKey();
-                if (ClientConnectionEvent.checkIsStateKeyConnect(key))
-                    it.remove();
-            }
-        }
+        events.addAll(clientStates.calcInactiveClientEvents());
 
         var insertableEvents = ClientConnectionEvent.toObjectForInsert(events);
 
