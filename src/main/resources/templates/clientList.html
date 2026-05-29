@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Client List</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="../static/css/style.css">
+</head>
+<body>
+    <h1>Client List</h1>
+
+    <div>
+        Total records: <span th:text="${clients.totalElements}">0</span>
+        &nbsp;|&nbsp; Page <span th:text="${clients.number + 1}">1</span> / <span th:text="${clients.totalPages}">1</span>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Device Name</th>
+                <th>MAC Address</th>
+                <th>WiFi Interface</th>
+                <th>Device Key</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="device, iterStat : ${clients.content}">
+                <td th:text="${clients.number * clients.size + iterStat.index + 1}">1</td>
+                <td th:text="${device.deviceName}">Device Name</td>
+                <td th:text="${device.deviceMac}">AA:BB:CC:DD:EE:FF</td>
+                <td th:text="${device.deviceIfaceWifi}">1</td>
+                <td>
+                    <a href="#" th:data-client-key="${device.deviceKey}"
+                       class="conn-link"
+                       th:text="${device.deviceKey}">1</a>
+                </td>
+            </tr>
+            <tr th:if="${clients.content.isEmpty()}">
+                <td colspan="5" style="text-align: center;">No clients found.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Pagination for client list -->
+    <div th:if="${clients.totalPages > 1}" class="pagination">
+        <a th:href="@{/web/client/getList.do(page=1)}"
+           th:classappend="${clients.isFirst()} ? 'active' : ''">First</a>
+
+        <a th:href="@{/web/client/getList.do(page=${clients.number})}"
+           th:if="${clients.hasPrevious()}">Previous</a>
+        <a th:unless="${clients.hasPrevious()}" class="active">Previous</a>
+
+        <th:block th:if="${clients.totalPages <= 10}"
+                  th:each="i : ${#numbers.sequence(1, clients.totalPages)}">
+            <a th:href="@{/web/client/getList.do(page=${i})}"
+               th:text="${i}"
+               th:classappend="${i == clients.number + 1} ? 'active' : ''">1</a>
+        </th:block>
+        <th:block th:unless="${clients.totalPages <= 10}">
+            <th:block th:with="
+                half = 5,
+                start = (${clients.number + 1} - ${half} < 1 ? 1 : (${clients.number + 1} - ${half} > ${clients.totalPages} - 10 ? ${clients.totalPages} - 9 : ${clients.number + 1} - ${half})),
+                end = (${start + 9 > clients.totalPages} ? ${clients.totalPages} : ${start + 9})">
+                <a th:if="${start > 1}" th:href="@{/web/client/getList.do(page=1)}">1</a>
+                <span th:if="${start > 2}">...</span>
+                <span th:each="i : ${#numbers.sequence(start, end)}">
+                    <a th:href="@{/web/client/getList.do(page=${i})}"
+                       th:text="${i}"
+                       th:classappend="${i == clients.number + 1} ? 'active' : ''">1</a>
+                </span>
+                <span th:if="${end < clients.totalPages - 1}">...</span>
+                <a th:if="${end < clients.totalPages}"
+                   th:href="@{/web/client/getList.do(page=${clients.totalPages})}"
+                   th:text="${clients.totalPages}">1</a>
+            </th:block>
+        </th:block>
+
+        <a th:href="@{/web/client/getList.do(page=${clients.number + 2})}"
+           th:if="${clients.hasNext()}">Next</a>
+        <a th:unless="${clients.hasNext()}" class="active">Next</a>
+
+        <a th:href="@{/web/client/getList.do(page=${clients.totalPages})}"
+           th:classappend="${clients.isLast()} ? 'active' : ''">Last</a>
+    </div>
+
+    <!-- Connection detail section (loaded via AJAX) -->
+    <div id="connection-section"></div>
+
+    <script>
+        document.addEventListener('click', function(e) {
+            // Click on device key link → load connection info
+            var link = e.target.closest('.conn-link');
+            if (link) {
+                e.preventDefault();
+                var clientKey = link.getAttribute('data-client-key');
+                loadConnections(clientKey, 1);
+                return;
+            }
+
+            // Click on pagination link inside connection-section → load via AJAX
+            var pagLink = e.target.closest('#connection-section .pagination a');
+            if (pagLink) {
+                e.preventDefault();
+                var href = pagLink.getAttribute('href');
+                if (href) {
+                    fetch(href)
+                        .then(function(r) { return r.text(); })
+                        .then(function(html) {
+                            document.getElementById('connection-section').innerHTML = html;
+                        });
+                }
+                return;
+            }
+        });
+
+        function loadConnections(clientKey, page) {
+            var url = '/web/client/connection/getInfo.do?clientKey=' + clientKey + '&page=' + page;
+            fetch(url)
+                .then(function(r) { return r.text(); })
+                .then(function(html) {
+                    document.getElementById('connection-section').innerHTML = html;
+                });
+        }
+    </script>
+</body>
+</html>

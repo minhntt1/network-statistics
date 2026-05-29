@@ -1,0 +1,86 @@
+<div th:fragment="connectionsFragment">
+    <h2>Connection Info</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Date/Time (UTC+7)</th>
+                <th>Status</th>
+                <th>Device Name</th>
+                <th>MAC</th>
+                <th>IPv4</th>
+                <th>Interface</th>
+                <th>IFace MAC</th>
+                <th>Device Vendor</th>
+                <th>AP Vendor</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="conn, iterStat : ${connections.content}">
+                <td th:text="${connections.number * connections.size + iterStat.index + 1}">1</td>
+                <td th:text="${conn.dateTimeUTC7}">2026-05-29T09:00</td>
+                <td th:text="${conn.connectStatus}">Connected</td>
+                <td th:text="${conn.deviceName}">Device</td>
+                <td th:text="${conn.deviceMac}">AA:BB:CC:DD:EE:FF</td>
+                <td th:text="${conn.deviceIpv4}">192.168.1.1</td>
+                <td th:text="${conn.ifaceName}">wlan0</td>
+                <td th:text="${conn.ifaceMac}">FF:EE:DD:CC:BB:AA</td>
+                <td th:text="${conn.deviceVendor}">Vendor</td>
+                <td th:text="${conn.ifaceVendor}">AP Vendor</td>
+            </tr>
+            <tr th:if="${connections.content.isEmpty()}">
+                <td colspan="10" style="text-align: center;">No connection records found.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Pagination for connections -->
+    <div th:if="${connections.totalPages > 1}" class="pagination">
+        <!-- First -->
+        <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=1)}"
+           th:classappend="${connections.isFirst()} ? 'active' : ''">First</a>
+
+        <!-- Previous -->
+        <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${connections.number})}"
+           th:if="${connections.hasPrevious()}">Previous</a>
+        <a th:unless="${connections.hasPrevious()}" class="active">Previous</a>
+
+        <!-- Numbered page window (≤10) -->
+        <th:block th:if="${connections.totalPages <= 10}"
+                  th:each="i : ${#numbers.sequence(1, connections.totalPages)}">
+            <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${i})}"
+               th:text="${i}"
+               th:classappend="${i == connections.number + 1} ? 'active' : ''">1</a>
+        </th:block>
+
+        <!-- Numbered page window (>10) -->
+        <th:block th:unless="${connections.totalPages <= 10}">
+            <th:block th:with="
+                half = 5,
+                start = (${connections.number + 1} - ${half} < 1 ? 1 : (${connections.number + 1} - ${half} > ${connections.totalPages} - 10 ? ${connections.totalPages} - 9 : ${connections.number + 1} - ${half})),
+                end = (${start + 9 > connections.totalPages} ? ${connections.totalPages} : ${start + 9})">
+                <a th:if="${start > 1}"
+                   th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=1)}">1</a>
+                <span th:if="${start > 2}">...</span>
+                <span th:each="i : ${#numbers.sequence(start, end)}">
+                    <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${i})}"
+                       th:text="${i}"
+                       th:classappend="${i == connections.number + 1} ? 'active' : ''">1</a>
+                </span>
+                <span th:if="${end < connections.totalPages - 1}">...</span>
+                <a th:if="${end < connections.totalPages}"
+                   th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${connections.totalPages})}"
+                   th:text="${connections.totalPages}">1</a>
+            </th:block>
+        </th:block>
+
+        <!-- Next -->
+        <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${connections.number + 2})}"
+           th:if="${connections.hasNext()}">Next</a>
+        <a th:unless="${connections.hasNext()}" class="active">Next</a>
+
+        <!-- Last -->
+        <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${connections.totalPages})}"
+           th:classappend="${connections.isLast()} ? 'active' : ''">Last</a>
+    </div>
+</div>

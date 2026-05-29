@@ -119,6 +119,11 @@ Run dev scheduler from java cmd
 java '-Dspring.profiles.active=dev-scheduler' -jar ./build/libs/network-statistic-0.0.1-SNAPSHOT.jar
 ```
 
+Run dev admin from java cmd
+```
+java '-Dspring.profiles.active=dev-admin' -jar ./build/libs/network-statistic-0.0.1-SNAPSHOT.jar
+```
+
 # Run inside container
 Run executor  from java command line
 ```
