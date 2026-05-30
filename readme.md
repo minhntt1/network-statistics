@@ -1,24 +1,119 @@
-# Description
-A project used to ingest and analyze data from internal network devices, featuring clients and access points' traffic, client disconnect/connect events and router's reboot events.
+# Network Statistics
+
+A project used to **ingest, normalize, analyze, and visualize** telemetry data from home/office network devices — including clients and access point traffic, client connect/disconnect events, and router reboot events.
 
 ![screenshot](docs/dashboard.png)
 
-## Tech stack
-- Backend: Spring framework, Spring JDBC Template, Quartz Scheduler, SNMP4J, Swagger
-- Frontend: Grafana
-- DB: MySQL
+## Tech Stack
+
+| Category | Technology |
+|---|---|
+| **Language** | Java 21 |
+| **Framework** | Spring Boot 3.5.6 |
+| **Database** | MySQL (via JDBC Template, JPA, jOOQ) |
+| **Device Polling** | SNMP4J (SNMP), Java HTTP Client (REST) |
+| **Scheduling** | Quartz Scheduler |
+| **API Docs** | Swagger (springdoc-openapi) |
+| **Frontend / Visualization** | Thymeleaf (admin UI) + Grafana (dashboards) |
+| **Monitoring** | Micrometer + Prometheus + Actuator |
+| **Build Tool** | Gradle (Kotlin DSL) |
+
+## Architecture Overview
+
+The system follows a **3-layer ETL pipeline** per device family:
+
+```
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│   Ingestion  │ -> │Normalization │ -> │ Persistence  │
+│    (in/)     │    │    (etl/)    │    │    (out/)    │
+└──────────────┘    └──────────────┘    └──────────────┘
+```
+
+- **`in/`** — Polls raw data from physical network devices via SNMP or HTTP APIs
+- **`etl/`** — Cleans, transforms, and summarizes raw data into normalized metrics
+- **`out/`** — Persists data to MySQL using JPA entities and JDBC templates
+
+The system supports **4 device families**:
+- **Aruba Instant AP** (SNMP-based)
+- **TP-Link Deco** (HTTP API-based)
+- **iGate GW240** (HTTP + SNMP)
+- **RFC1213** (standard SNMP MIB-II)
+
+Two **Quartz scheduler instances** orchestrate the pipeline:
+- **Poll-data scheduler** — Triggers data ingestion jobs at regular intervals
+- **ETL scheduler** — Triggers normalization and summarization jobs
+
+## Documentation
+
+| Document | Description |
+|---|---|
+| [Architecture Guide](docs/architecture-guide.md) | Detailed ETL pipeline, scheduler, and cross-cutting concerns |
+| [Project Overview](docs/project-overview.md) | Comprehensive project description and conventions |
+| [Device Vendor Reference](docs/device-vendor-reference.md) | Supported vendors, protocols, OIDs, and data types |
+| [Database Schema](docs/database-schema.md) | Staging, archive, ingestion, and ETL result tables |
+| [Configuration Reference](docs/configuration-reference.md) | Spring profiles, properties, and Quartz configs |
+| [Deployment Guide](docs/deployment-guide.md) | Local, container, and production deployment |
+| [API Reference](docs/api-reference.md) | Scheduler, client info, and modem auth endpoints |
+| [Package Structure Diagram](docs/package_diagram.puml) | PlantUML diagram of the package structure |
 
 ## Project structure
-![](docs/package-structure.png)
 
-## High level design
-![](docs/HLD.png)
+![Package Structure](docs/package-structure.png)
+
+## Quick Start
+
+### Prerequisites
+- Java 21
+- MySQL 8+
+- Gradle (or use the bundled `gradlew` wrapper)
+
+### Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone <repo-url>
+   cd network-statistics
+   ```
+
+2. **Create the database**
+   ```sql
+   CREATE DATABASE network_statistics;
+   CREATE DATABASE quartz;
+   ```
+
+3. **Configure database credentials**
+
+   Update `src/main/resources/application-dev-executor.properties` with your MySQL connection details.
+
+4. **Build the project**
+   ```bash
+   ./gradlew clean build -x test
+   ```
+
+5. **Run the application**
+
+   Executor mode:
+   ```bash
+   java -Dspring.profiles.active=dev-executor -jar ./build/libs/network-statistic-0.0.1-SNAPSHOT.jar
+   ```
+
+   Scheduler mode:
+   ```bash
+   java -Dspring.profiles.active=dev-scheduler -jar ./build/libs/network-statistic-0.0.1-SNAPSHOT.jar
+   ```
+
+   Admin mode:
+   ```bash
+   java -Dspring.profiles.active=dev-admin -jar ./build/libs/network-statistic-0.0.1-SNAPSHOT.jar
+   ```
 
 # Profile info
 - dev-executor: used to run executor instances outside container environment with direct IP (ex: 192.168.100.1)  
 - dev-scheduler: used to run scheduler instances outside container environment with direct IP (ex: 192.168.100.1)
+- dev-admin: used to run admin web UI outside container environment with direct IP
 - prd-executor: used to run executor instances inside container environment using container hostname (ex: mysql)
 - prd-scheduler:  used to run scheduler instances inside container environment using container hostname (ex: mysql)
+- prd-admin: used to run admin web UI inside container environment using container hostname
 
 # Create archive, staging, ingestion table
 ```sql
@@ -58,6 +153,7 @@ alter table <data>_archive partition by range (year(poll_time))
 7. Update src/main/java/com/home/network/statistic/common/config/SqlQueryConfig.java to declare new sql query resource locations
 8. Update *properties files to define new threadpool size configs for new jobs
 9. Declare quartz new quartz triggers, job details in through scheduler interface
+
 Example request for new job details:
 ```json
 {
@@ -69,6 +165,7 @@ Example request for new job details:
   "requestsRecovery": true
 }
 ```
+
 Example request for new triggers:
 ```json
 {
@@ -108,7 +205,7 @@ Build and skip test
 gradle clean build -x test
 ```
 
-# Run on dev pofile - local
+# Run on dev profile - local
 Run executor  from java command line
 ```
 java '-Dspring.profiles.active=dev-executor' -jar ./build/libs/network-statistic-0.0.1-SNAPSHOT.jar
@@ -144,4 +241,3 @@ Run executor  from bash shell
 ```
 java -Xmx256m -Dspring.profiles.active=prd-scheduler -jar network-statistic-0.0.1-SNAPSHOT.jar
 ```
-
