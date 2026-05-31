@@ -48,11 +48,10 @@ CAST(
 | # | File | Change |
 |---|---|---|
 | 1 | `DeviceWlanConnectionsFact.java` | Add `Long eventTimestamp` field with `@Column` |
-| 2 | `DeviceWlanConnectionsDTO.java` | Add `Long eventTimestamp` field, populate from fact |
-| 3 | `client-info-query.xml` (Aruba) | Add `event_timestamp` column to `insert into` and `select` |
-| 4 | `tplink-deco-query.xml` (TP-Link) | Same change as #3 |
-| 5 | `igate240-status-wifi-station.xml` (iGate) | Same change as #3 |
-| 6 | `docs/database-schema.md` | Document the new column |
+| 2 | `client-info-query.xml` (Aruba) | Add `event_timestamp` column to `insert into` and `select` |
+| 3 | `tplink-deco-query.xml` (TP-Link) | Same change as #2 |
+| 4 | `igate240-status-wifi-station.xml` (iGate) | Same change as #2 |
+| 5 | `docs/database-schema.md` | Document the new column |
 
 ## Risks
 

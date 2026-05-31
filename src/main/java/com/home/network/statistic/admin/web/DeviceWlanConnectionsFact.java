@@ -90,6 +90,9 @@ public class DeviceWlanConnectionsFact {
     @JoinColumn(name = "cnt_status_key")
     private ConnectionStatusDim connectionStatusKey;
 
+    @Column(name = "event_timestamp")
+    private Long eventTimestamp;
+
     public String toUTC7DateTime() {
         return ZonedDateTime.of(dateKey.getDate(), timeKey.timeToLocalTime(), ZoneOffset.UTC)
                 .withZoneSameInstant(ZoneOffset.ofHours(7))
