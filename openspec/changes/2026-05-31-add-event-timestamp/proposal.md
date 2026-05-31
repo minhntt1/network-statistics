@@ -29,11 +29,9 @@ This is expensive for queries that need to sort, filter by time range, or displa
 ## SQL Formula
 
 ```sql
-CAST(
-  CONCAT(
-    DATE_FORMAT(dd.date, '%Y%m%d'),
-    DATE_FORMAT(SEC_TO_TIME(td.time), '%H%i%s')
-  ) AS UNSIGNED
+CONCAT(
+  DATE_FORMAT(dd.date, '%Y%m%d'),
+  DATE_FORMAT(SEC_TO_TIME(td.time), '%H%i%s')
 ) AS event_timestamp
 ```
 
@@ -61,11 +59,9 @@ CAST(
   UPDATE device_wlan_connections_fact f
   JOIN date_dim d ON f.date_key = d.date_key
   JOIN time_dim t ON f.time_key = t.time_key
-  SET f.event_timestamp = CAST(
-    CONCAT(
-      DATE_FORMAT(d.date, '%Y%m%d'),
-      DATE_FORMAT(SEC_TO_TIME(t.time), '%H%i%s')
-    ) AS UNSIGNED
+  SET f.event_timestamp = CONCAT(
+    DATE_FORMAT(d.date, '%Y%m%d'),
+    DATE_FORMAT(SEC_TO_TIME(t.time), '%H%i%s')
   )
   ```
 - **Storage**: One extra BIGINT column = 8 bytes per row, negligible impact.
