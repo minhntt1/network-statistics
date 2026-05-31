@@ -15,15 +15,15 @@ public class DeviceWlanConnectionsDTO {
     private String deviceVendor;
     private String ifaceVendor;
 
-    public DeviceWlanConnectionsDTO(DeviceWlanConnectionsFact fact) {
-        this.dateTimeUTC7 = fact.toUTC7DateTime();
-        this.connectStatus = fact.getConnectionStatusKey().getStatus();
-        this.deviceName = fact.getDeviceKey().getDeviceName();
-        this.deviceMac = fact.toDeviceMacHex();
-        this.deviceIpv4 = fact.toClientIp4String();
-        this.ifaceName = fact.getIfaceKey().getIfaceName();
-        this.ifaceMac = fact.toIfaceMacHex();
-        this.deviceVendor = fact.getVendorKey().getVendorName();
-        this.ifaceVendor = fact.getApVendorKey().getVendorName();
+    public DeviceWlanConnectionsDTO(DeviceWlanConnectionsFactView deviceWlanConnectionsFactView) {
+        this.dateTimeUTC7 = deviceWlanConnectionsFactView.toUTC7DateTime();
+        this.connectStatus = deviceWlanConnectionsFactView.getConnectionStatus();
+        this.deviceName = deviceWlanConnectionsFactView.getClientName();
+        this.deviceMac = deviceWlanConnectionsFactView.toDeviceMacHex();
+        this.deviceIpv4 = deviceWlanConnectionsFactView.toClientIp4String();
+        this.ifaceName = deviceWlanConnectionsFactView.getIfaceName();
+        this.ifaceMac = deviceWlanConnectionsFactView.toIfaceMacHex();
+        this.deviceVendor = deviceWlanConnectionsFactView.getClientVendor();
+        this.ifaceVendor = deviceWlanConnectionsFactView.getApVendor();
     }
 }
