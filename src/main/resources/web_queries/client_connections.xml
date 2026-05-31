@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+    <entry key="countAndFilterClientConnInfo">
+        select
+
+        count(*) total_records
+
+        from device_wlan_connections_fact dwcf
+
+        where dwcf.device_key = ?
+    </entry>
+
+    <!-- following query is to get rid of buggy jpa queries not utilizing indexed columns   -->
+    <entry key="selectAndFilterClientConnInfo">
+        with select_conn_w_limit as(
+            select
+
+            dwcf.*
+
+            from device_wlan_connections_fact dwcf
+
+            where dwcf.device_key = ?
+
+            order by dwcf.device_key, dwcf.event_timestamp desc  -- make the query full utilize the index
+
+            limit ?,?
+        )
+        select
+
+        dd.date,
+        td.time,
+        dd1.device_name client_name,
+        dd1.device_mac client_mac,
+        id.ipv4 client_ipv4,
+        ad.ap_mac,
+        ad.ap_name,
+        ifd.iface_name,
+        ifd.iface_phy_name,
+        ifd.iface_mac,
+        vd.vendor_name client_vendor,
+        vd1.vendor_name ap_vendor,
+        csd.status connection_status
+
+        from select_conn_w_limit sl
+
+        join date_dim dd using (date_key)
+
+        join time_dim td using (time_key)
+
+        join device_dim dd1 using (device_key)
+
+        join ip_dim id on id.ip_key = sl.device_ip_key
+
+        join ap_dim ad using (ap_key)
+
+        join gw_iface_dim ifd using (iface_key)
+
+        join vendor_dim vd using (vendor_key)
+
+        join vendor_dim vd1 on vd1.vendor_key = sl.ap_vendor_key
+
+        join connection_status_dim csd on csd.id = sl.cnt_status_key
+
+        order by sl.event_timestamp desc;
+    </entry>
+</properties>

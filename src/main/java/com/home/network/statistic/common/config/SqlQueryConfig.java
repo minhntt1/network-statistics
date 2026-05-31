@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.object.SqlQuery;
 
 import java.util.Properties;
 
@@ -63,6 +64,14 @@ public class SqlQueryConfig {
     ListSqlQuery getListTpLinkDecoDeviceQuery() {
         Properties properties = new Properties();
         properties.loadFromXML(new ClassPathResource("etl_queries/tplink-deco-device-query.xml").getInputStream());
+        return new ListSqlQuery(properties);
+    }
+
+    @SneakyThrows
+    @Bean(name = "webClientConnectionsQuery")
+    ListSqlQuery getListWebClientConnectionsQuery() {
+        Properties properties = new Properties();
+        properties.loadFromXML(new ClassPathResource("web_queries/client_connections.xml").getInputStream());
         return new ListSqlQuery(properties);
     }
 }

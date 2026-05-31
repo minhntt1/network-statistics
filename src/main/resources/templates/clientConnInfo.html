@@ -1,0 +1,45 @@
+<div th:fragment="connectionsFragment">
+    <h2>Connection Info</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Date/Time (UTC+7)</th>
+                <th>Status</th>
+                <th>Device Name</th>
+                <th>MAC</th>
+                <th>IPv4</th>
+                <th>Interface</th>
+                <th>IFace MAC</th>
+                <th>Device Vendor</th>
+                <th>AP Vendor</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="conn, iterStat : ${listConnections}">
+                <td th:text="${(currentPage - 1) * 15 + iterStat.index + 1}">1</td>
+                <td th:text="${conn.dateTimeUTC7}">2026-05-29T09:00</td>
+                <td th:text="${conn.connectStatus}">Connected</td>
+                <td th:text="${conn.deviceName}">Device</td>
+                <td th:text="${conn.deviceMac}">AA:BB:CC:DD:EE:FF</td>
+                <td th:text="${conn.deviceIpv4}">192.168.1.1</td>
+                <td th:text="${conn.ifaceName}">wlan0</td>
+                <td th:text="${conn.ifaceMac}">FF:EE:DD:CC:BB:AA</td>
+                <td th:text="${conn.deviceVendor}">Vendor</td>
+                <td th:text="${conn.ifaceVendor}">AP Vendor</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(listConnections)}">
+                <td colspan="10" style="text-align: center;">No connection records found.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Pagination for connections -->
+    <div th:if="${pages.length > 1}" class="pagination">
+        <span th:each="p : ${pages}">
+            <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${p})}"
+               th:text="${p}"
+               th:classappend="${p == currentPage} ? 'active' : ''">1</a>
+        </span>
+    </div>
+</div>

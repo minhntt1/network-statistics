@@ -26,7 +26,8 @@ import java.util.Properties;
             "com.home.network.statistic.poller.igate.gw240.out",
             "com.home.network.statistic.vendor",
             "com.home.network.statistic.poller.tplink.deco.out",
-            "com.home.network.statistic.poller.authentication"
+            "com.home.network.statistic.poller.authentication",
+            "com.home.network.statistic.admin.web"
         },
         entityManagerFactoryRef = "appEm",
         transactionManagerRef = "appJpaTx"
@@ -72,7 +73,8 @@ public class ExecutorDataSourceConfig {
                 "com.home.network.statistic.vendor",
                 "com.home.network.statistic.poller.igate.gw240.out",
                 "com.home.network.statistic.poller.tplink.deco.out",
-                "com.home.network.statistic.poller.authentication");
+                "com.home.network.statistic.poller.authentication",
+                "com.home.network.statistic.admin.web");
         return conf;
     }
 }
