@@ -179,3 +179,42 @@ These tables store the output of the normalization/summarization layer. They are
 | Dataset | Description | Source |
 |---|---|---|
 | ClientWlanConnectEvent | Connect events from WiFi station data | StatusWifiStationEntity |
+
+---
+
+## Dimension & Fact Tables
+
+The dimensional model uses a star schema pattern for WLAN connection events.
+
+### `device_wlan_connections_fact`
+
+Connection events (connect/disconnect) from all device sources (Aruba, TP-Link Deco, iGate GW240).
+
+| Column | Type | Description |
+|---|---|---|
+| date_key | INT (FK) | Reference to `date_dim` |
+| time_key | INT (FK) | Reference to `time_dim` |
+| device_key | INT (FK) | Reference to `device_dim` |
+| device_ip_key | INT (FK) | Reference to `ip_dim` |
+| ap_key | INT (FK) | Reference to `ap_dim` (-2147483648 = undefined) |
+| iface_key | INT (FK) | Reference to `gw_iface_dim` |
+| vendor_key | INT (FK) | Reference to `vendor_dim` (-2147483648 = undefined) |
+| ap_vendor_key | INT (FK) | Reference to `vendor_dim` (-2147483648 = undefined) |
+| cnt_status_key | INT (FK) | Reference to `connection_status_dim` |
+| event_timestamp | BIGINT | Denormalized timestamp formatted as YYYYMMDDHHmmSS, computed from `date_dim.date` + `time_dim.time` |
+
+**Composite Primary Key**: `(date_key, time_key, device_key, device_ip_key, ap_key, iface_key, vendor_key, ap_vendor_key, cnt_status_key)`
+
+### `date_dim`
+
+| Column | Type | Description |
+|---|---|---|
+| date_key | INT (PK) | Surrogate key |
+| date | DATE | Calendar date |
+
+### `time_dim`
+
+| Column | Type | Description |
+|---|---|---|
+| time_key | INT (PK) | Surrogate key |
+| time | INT | Seconds since midnight (0-86399) |
