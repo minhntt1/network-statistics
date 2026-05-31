@@ -4,14 +4,14 @@
 
 ```sql
 ALTER TABLE device_wlan_connections_fact
-  ADD COLUMN event_timestamp BIGINT UNSIGNED NULL
+  ADD COLUMN event_timestamp BIGINT NULL
   AFTER cnt_status_key;
 ```
 
 | Property | Value |
 |---|---|
 | Column name | `event_timestamp` |
-| Data type | `BIGINT UNSIGNED` |
+| Data type | `BIGINT` |
 | Nullable | `NULL` (existing rows backfilled separately) |
 | Default | `NULL` |
 | Java type | `Long` (boxed, nullable) |
@@ -54,22 +54,6 @@ private Long eventTimestamp;
 ```
 
 Placement: After the `connectionStatusKey` relationship block, before the helper methods.
-
-**Add helper method** (optional but recommended for convenience):
-
-```java
-public Long toEventTimestamp() {
-    if (dateKey == null || timeKey == null) return null;
-    LocalDateTime dt = ZonedDateTime.of(dateKey.getDate(), timeKey.timeToLocalTime(), ZoneOffset.UTC)
-            .withZoneSameInstant(ZoneOffset.ofHours(7))
-            .toLocalDateTime();
-    return Long.parseLong(
-        DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(dt)
-    );
-}
-```
-
-The `event_timestamp` is in **UTC+7** timezone, matching the existing `toUTC7DateTime()` method behavior.
 
 ### 3.2 `client-info-query.xml` (Aruba IAP)
 
