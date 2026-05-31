@@ -43,16 +43,16 @@
 
     <!-- Pagination for client list -->
     <div th:if="${clients.totalPages > 1}" class="pagination">
-        <a th:href="@{/web/client/getList.do(page=1)}"
+        <a th:href="@{/web/client/getList.do(page=1, size=${clients.size})}"
            th:classappend="${clients.isFirst()} ? 'active' : ''">First</a>
 
-        <a th:href="@{/web/client/getList.do(page=${clients.number})}"
+        <a th:href="@{/web/client/getList.do(page=${clients.number}, size=${clients.size})}"
            th:if="${clients.hasPrevious()}">Previous</a>
         <a th:unless="${clients.hasPrevious()}" class="active">Previous</a>
 
         <th:block th:if="${clients.totalPages <= 10}"
                   th:each="i : ${#numbers.sequence(1, clients.totalPages)}">
-            <a th:href="@{/web/client/getList.do(page=${i})}"
+            <a th:href="@{/web/client/getList.do(page=${i}, size=${clients.size})}"
                th:text="${i}"
                th:classappend="${i == clients.number + 1} ? 'active' : ''">1</a>
         </th:block>
@@ -61,25 +61,25 @@
                 half = 5,
                 start = (${clients.number + 1} - ${half} < 1 ? 1 : (${clients.number + 1} - ${half} > ${clients.totalPages} - 10 ? ${clients.totalPages} - 9 : ${clients.number + 1} - ${half})),
                 end = (${start + 9 > clients.totalPages} ? ${clients.totalPages} : ${start + 9})">
-                <a th:if="${start > 1}" th:href="@{/web/client/getList.do(page=1)}">1</a>
+                <a th:if="${start > 1}" th:href="@{/web/client/getList.do(page=1, size=${clients.size})}">1</a>
                 <span th:if="${start > 2}">...</span>
                 <span th:each="i : ${#numbers.sequence(start, end)}">
-                    <a th:href="@{/web/client/getList.do(page=${i})}"
+                    <a th:href="@{/web/client/getList.do(page=${i}, size=${clients.size})}"
                        th:text="${i}"
                        th:classappend="${i == clients.number + 1} ? 'active' : ''">1</a>
                 </span>
                 <span th:if="${end < clients.totalPages - 1}">...</span>
                 <a th:if="${end < clients.totalPages}"
-                   th:href="@{/web/client/getList.do(page=${clients.totalPages})}"
+                   th:href="@{/web/client/getList.do(page=${clients.totalPages}, size=${clients.size})}"
                    th:text="${clients.totalPages}">1</a>
             </th:block>
         </th:block>
 
-        <a th:href="@{/web/client/getList.do(page=${clients.number + 2})}"
+        <a th:href="@{/web/client/getList.do(page=${clients.number + 2}, size=${clients.size})}"
            th:if="${clients.hasNext()}">Next</a>
         <a th:unless="${clients.hasNext()}" class="active">Next</a>
 
-        <a th:href="@{/web/client/getList.do(page=${clients.totalPages})}"
+        <a th:href="@{/web/client/getList.do(page=${clients.totalPages}, size=${clients.size})}"
            th:classappend="${clients.isLast()} ? 'active' : ''">Last</a>
     </div>
 
@@ -114,7 +114,11 @@
         });
 
         function loadConnections(clientKey, page) {
+            var size = new URLSearchParams(window.location.search).get('size');
             var url = '/web/client/connection/getInfo.do?clientKey=' + clientKey + '&page=' + page;
+            if (size) {
+                url += '&size=' + size;
+            }
             fetch(url)
                 .then(function(r) { return r.text(); })
                 .then(function(html) {

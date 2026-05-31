@@ -37,18 +37,18 @@
     <!-- Pagination for connections -->
     <div th:if="${connections.totalPages > 1}" class="pagination">
         <!-- First -->
-        <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=1)}"
+        <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=1, size=${connections.size})}"
            th:classappend="${connections.isFirst()} ? 'active' : ''">First</a>
 
         <!-- Previous -->
-        <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${connections.number})}"
+        <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${connections.number}, size=${connections.size})}"
            th:if="${connections.hasPrevious()}">Previous</a>
         <a th:unless="${connections.hasPrevious()}" class="active">Previous</a>
 
         <!-- Numbered page window (≤10) -->
         <th:block th:if="${connections.totalPages <= 10}"
                   th:each="i : ${#numbers.sequence(1, connections.totalPages)}">
-            <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${i})}"
+            <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${i}, size=${connections.size})}"
                th:text="${i}"
                th:classappend="${i == connections.number + 1} ? 'active' : ''">1</a>
         </th:block>
@@ -60,27 +60,27 @@
                 start = (${connections.number + 1} - ${half} < 1 ? 1 : (${connections.number + 1} - ${half} > ${connections.totalPages} - 10 ? ${connections.totalPages} - 9 : ${connections.number + 1} - ${half})),
                 end = (${start + 9 > connections.totalPages} ? ${connections.totalPages} : ${start + 9})">
                 <a th:if="${start > 1}"
-                   th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=1)}">1</a>
+                   th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=1, size=${connections.size})}">1</a>
                 <span th:if="${start > 2}">...</span>
                 <span th:each="i : ${#numbers.sequence(start, end)}">
-                    <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${i})}"
+                    <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${i}, size=${connections.size})}"
                        th:text="${i}"
                        th:classappend="${i == connections.number + 1} ? 'active' : ''">1</a>
                 </span>
                 <span th:if="${end < connections.totalPages - 1}">...</span>
                 <a th:if="${end < connections.totalPages}"
-                   th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${connections.totalPages})}"
+                   th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${connections.totalPages}, size=${connections.size})}"
                    th:text="${connections.totalPages}">1</a>
             </th:block>
         </th:block>
 
         <!-- Next -->
-        <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${connections.number + 2})}"
+        <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${connections.number + 2}, size=${connections.size})}"
            th:if="${connections.hasNext()}">Next</a>
         <a th:unless="${connections.hasNext()}" class="active">Next</a>
 
         <!-- Last -->
-        <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${connections.totalPages})}"
+        <a th:href="@{/web/client/connection/getInfo.do(clientKey=${param.clientKey[0]}, page=${connections.totalPages}, size=${connections.size})}"
            th:classappend="${connections.isLast()} ? 'active' : ''">Last</a>
     </div>
 </div>
