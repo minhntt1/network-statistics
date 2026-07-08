@@ -9,6 +9,7 @@ import lombok.Setter;
 import java.net.URI;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,6 +62,7 @@ public class WebRequestExtra {
                 )
                 .headers(headers.toArray(String[]::new))  // does not accept array of size 0
                 .uri(URI.create("http://" + webEncryptor.getWebUiCredentials().getHost() + PATH_FIND_DEVICES.formatted(stok)))
+                .timeout(Duration.ofSeconds(10))
                 .build();
     }
 
@@ -71,6 +73,7 @@ public class WebRequestExtra {
                 )
                 .headers(headers.toArray(String[]::new))
                 .uri(URI.create("http://" + webEncryptor.getWebUiCredentials().getHost() + PATH_FIND_CLIENT_LIST.formatted(stok)))
+                .timeout(Duration.ofSeconds(10))
                 .build();
     }
 
@@ -81,6 +84,7 @@ public class WebRequestExtra {
                 )
                 .headers(headers.toArray(String[]::new))
                 .uri(URI.create("http://" + webEncryptor.getWebUiCredentials().getHost() + PATH_FIND_WLAN_INFO.formatted(stok)))
+                .timeout(Duration.ofSeconds(10))
                 .build();
     }
 
@@ -91,6 +95,7 @@ public class WebRequestExtra {
                 )
                 .headers(headers.toArray(String[]::new))
                 .uri(URI.create("http://" + webEncryptor.getWebUiCredentials().getHost() + PATH_FIND_DATA_KEYS))
+                .timeout(Duration.ofSeconds(10))
                 .build();
     }
 
@@ -101,6 +106,7 @@ public class WebRequestExtra {
                 )
                 .headers(headers.toArray(String[]::new))
                 .uri(URI.create("http://" + webEncryptor.getWebUiCredentials().getHost() + PATH_FIND_AUTH_KEYS))
+                .timeout(Duration.ofSeconds(10))
                 .build();
     }
 
@@ -111,6 +117,7 @@ public class WebRequestExtra {
                 )
                 .headers(headers.toArray(String[]::new))
                 .uri(URI.create("http://" + webEncryptor.getWebUiCredentials().getHost() + PATH_LOGIN))
+                .timeout(Duration.ofSeconds(10))
                 .build();
     }
 

@@ -42,8 +42,10 @@ public class RestClientConfig {
 
     @Bean
     RestClient insecureRestClient(HttpClient client) {
+        var factory = new JdkClientHttpRequestFactory(client);
+        factory.setReadTimeout(Duration.of(10, ChronoUnit.SECONDS));
         return RestClient.builder()
-                .requestFactory(new JdkClientHttpRequestFactory(client))
+                .requestFactory(factory)
                 .defaultStatusHandler(HttpStatusCode::isError, (req, resp) -> {})
                 .build();
     }
