@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jre-slim
+FROM eclipse-temurin:21-jre-alpine
 
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
