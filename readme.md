@@ -189,6 +189,43 @@ Example request for new triggers:
 4. Monitor dev outputs, if all outputs satistfied, deploy on prd
 5. Merge code to main
 
+# Branch Model
+- `main` — production-ready code
+- `dev` — integration branch for features
+
+# Branch Protection Rules
+- Direct pushes to `main` and `dev` are disabled
+- 1 approving review required, including owner review when configured
+- Stale review dismissed on new commits
+- CI checks must pass before merging
+- Branches cannot be deleted
+
+# CI/CD
+The project uses GitHub Actions to build and push Docker images to GitHub Container Registry (GHCR).
+
+Triggers:
+- Push to `dev` → builds and pushes `ghcr.io/minhntt1/network-statistics:dev`
+- Push/merge to `main` → builds and pushes `ghcr.io/minhntt1/network-statistics:main`
+
+Workflow steps:
+1. Checkout code
+2. Set up JDK 21
+3. Run tests
+4. Build JAR
+5. Build and push Docker image to GHCR
+
+# Docker
+To build locally:
+```bash
+./gradlew clean build -x test
+docker build -t network-statistics:latest .
+```
+
+Run with any Spring profile:
+```bash
+docker run --rm -e SPRING_PROFILES_ACTIVE=prd-executor network-statistics:latest
+```
+
 # Common tasks
 Run unit tests
 ```
