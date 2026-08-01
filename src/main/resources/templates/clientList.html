@@ -86,7 +86,7 @@
     <!-- Connection detail section (loaded via AJAX) -->
     <div id="connection-section"></div>
 
-    <script>
+    <script th:inline="javascript">
         document.addEventListener('click', function(e) {
             // Click on device key link → load connection info
             var link = e.target.closest('.conn-link');
@@ -115,7 +115,8 @@
 
         function loadConnections(clientKey, page) {
             var size = new URLSearchParams(window.location.search).get('size');
-            var url = '/web/client/connection/getInfo.do?clientKey=' + clientKey + '&page=' + page;
+            var basePath = /*[[@{/}]]*/ '';
+            var url = basePath + '/web/client/connection/getInfo.do?clientKey=' + clientKey + '&page=' + page;
             if (size) {
                 url += '&size=' + size;
             }
