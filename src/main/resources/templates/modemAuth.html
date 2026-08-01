@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Modem Authentication Data</title>
-    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}">
 </head>
 <body>
     <h2><a th:href="@{/web/modem/auth/getListAuthInfo.do}">Modem AuthData</a></h2>
@@ -83,6 +83,6 @@
         });
     </script>
     
-    <script src="/js/script.js"></script>
+    <script th:src="@{/js/script.js}"></script>
 </body>
 </html>
