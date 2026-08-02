@@ -116,7 +116,7 @@
         function loadConnections(clientKey, page) {
             var size = new URLSearchParams(window.location.search).get('size');
             var basePath = /*[[@{/}]]*/ '';
-            var url = basePath + '/web/client/connection/getInfo.do?clientKey=' + clientKey + '&page=' + page;
+            var url = basePath.replace(/\/$/, '') + '/web/client/connection/getInfo.do?clientKey=' + clientKey + '&page=' + page;
             if (size) {
                 url += '&size=' + size;
             }
