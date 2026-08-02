@@ -2,6 +2,11 @@
 
 A project used to **ingest, normalize, analyze, and visualize** telemetry data from home/office network devices — including clients and access point traffic, client connect/disconnect events, and router reboot events.
 
+## Repository Info
+
+- **Base branch**: `dev` (PRs must target `dev`, not `main`)
+- **Test command**: `cd network-statistics && ./gradlew clean test`
+
 ![screenshot](docs/dashboard.png)
 
 ## Tech Stack
